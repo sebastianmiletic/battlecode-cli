@@ -304,6 +304,8 @@ class BattlecodeApp(ArenaActions, App):
         self.notify(message, title="Could not complete action", severity="error", timeout=8)
 
     def update_settings(self) -> None:
+        if self._closing or self.query_one_optional("#settings-title", Static) is None:
+            return
         credential = self.api.credential
         profiles = []
         active_id = None

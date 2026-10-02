@@ -78,6 +78,7 @@ async def test_first_run_key_prompt_connect_and_persistent_disconnect(
         assert app.query_one("#api-key", Input).value == ""
         assert "bc_first_fixture" not in app.export_screenshot()
         await visible_click(app, pilot, "#disconnect-account")
+        await app.workers.wait_for_complete()
         assert app.api.credential is None
         assert app.accounts.active_id is None
         assert len(app.accounts.accounts()) == 1

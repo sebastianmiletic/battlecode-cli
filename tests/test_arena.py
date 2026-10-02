@@ -61,7 +61,12 @@ def test_import_hundreds_of_custom_maps_dedup_and_preserve_originals(tmp_path):
 def test_map_zip_rejects_unsafe_paths(tmp_path, name):
     source = tmp_path / "unsafe.zip"
     with zipfile.ZipFile(source, "w") as archive:
-        archive.writestr(name, map_text())
+        archive.writestr(name.replace("\\", "/"), map_text())
+    # Windows normalizes names while writing ZIPs; preserve the malicious on-disk spelling.
+    if "\\" in name:
+        source.write_bytes(
+            source.read_bytes().replace(name.replace("\\", "/").encode(), name.encode())
+        )
     with pytest.raises(ArenaError, match="unsafe"):
         MapLibrary(tmp_path / "library").import_path(str(source))
     assert not (tmp_path / "library").exists()
