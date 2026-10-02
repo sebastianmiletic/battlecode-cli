@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import httpx
 import pytest
-from textual.widgets import ContentSwitcher, DataTable, Input, Select, Static
+from textual.widgets import ContentSwitcher, DataTable, Input, Select, Static, TabbedContent
 
 from battlecode_cli import app as app_module
 from battlecode_cli.api import BattlecodeAPI
@@ -158,9 +158,12 @@ async def test_mouse_navigation_replay_playback_seek_inspection_and_back(size, t
         await pilot.pause(0.2)
         # Real mouse navigation, not just calling action_view().
         nav = app.query_one("#nav")
-        assert await pilot.click(nav, offset=(4, 7))
+        assert await pilot.click(nav, offset=(4, 2))
         await pilot.pause(0.2)
-        assert app.query_one("#pages", ContentSwitcher).current == "replays"
+        assert app.query_one("#pages", ContentSwitcher).current == "games"
+        await pilot.click(app.query_one("#game-tabs", TabbedContent).get_tab("game-local"))
+        await pilot.pause(0.2)
+        assert app.query_one("#game-tabs", TabbedContent).active == "game-local"
         await visible_click(app, pilot, "#sample-replay")
         assert isinstance(app.screen, ReplayViewer)
         viewer = app.screen
@@ -208,7 +211,8 @@ async def test_mouse_navigation_replay_playback_seek_inspection_and_back(size, t
         await pilot.press("escape")
         await pilot.pause(0.1)
         assert not isinstance(app.screen, ReplayViewer)
-        assert app.query_one("#pages", ContentSwitcher).current == "replays"
+        assert app.query_one("#pages", ContentSwitcher).current == "games"
+        assert app.query_one("#game-tabs", TabbedContent).active == "game-local"
 
 
 async def test_import_picker_library_and_confirmed_removal(tmp_path):

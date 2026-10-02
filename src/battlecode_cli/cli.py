@@ -19,7 +19,7 @@ from .replays import load_replay
 
 def parser() -> argparse.ArgumentParser:
     cli = argparse.ArgumentParser(
-        prog="battlecode-cli", description="UNSW Battlecode terminal control room"
+        prog="battlecode-cli", description="UNSW Battlecode dashboard and local benchmark arena"
     )
     cli.add_argument("--version", action="version", version=f"battlecode-cli {__version__}")
     cli.add_argument(

@@ -22,6 +22,9 @@ def record(item: dict) -> tuple[int, int, int]:
 
 
 def winrate(item: dict) -> str:
+    source = item.get("record") if isinstance(item.get("record"), dict) else item
+    if not all(key in source for key in ("wins", "draws", "losses")):
+        return "n/a"
     wins, draws, losses = record(item)
     total = wins + draws + losses
     return f"{wins / total:.1%}" if total else "n/a"
@@ -40,6 +43,39 @@ def date_label(value: Any) -> str:
         return date.strftime("%d %b %H:%M")
     except ValueError:
         return str(value)[:16]
+
+
+def members_label(team: dict) -> str:
+    members = team.get("members")
+    if not isinstance(members, list):
+        return "n/a"
+    names = [
+        str(member.get("username", member.get("name", "")))
+        if isinstance(member, dict)
+        else str(member)
+        for member in members
+    ]
+    return ", ".join(name for name in names if name) or "n/a"
+
+
+def leaderboard_rows(value: Any) -> list[dict]:
+    result = []
+    for entry in rows(value, "teams", "leaderboard", "ratings"):
+        team = entry.get("team")
+        merged = (
+            {**team, **{key: val for key, val in entry.items() if key != "team"}}
+            if isinstance(team, dict)
+            else dict(entry)
+        )
+        ident = merged.get("id", merged.get("teamId"))
+        if type(ident) is not int or ident <= 0:
+            continue
+        merged["id"] = ident
+        result.append(merged)
+    return sorted(
+        result,
+        key=lambda team: (team.get("rank") or 10**9, -(team.get("elo", team.get("rating")) or 0)),
+    )
 
 
 def team_data(value: dict) -> dict:
@@ -87,7 +123,7 @@ def battle_row(value: dict, our_team_id: int | None = None) -> dict:
     return {
         "id": value.get("id") or match.get("id"),
         "opponent": str(opponent),
-        "mode": "Ranked" if match.get("ranked") else "Practice",
+        "mode": "Ranked" if match.get("ranked") else "Unranked",
         "result": str(outcome).upper(),
         "score": score,
         "change": f"{float(change):+g}" if isinstance(change, (int, float)) else "·",

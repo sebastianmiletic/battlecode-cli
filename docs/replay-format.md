@@ -6,7 +6,7 @@ The built-in player is a read-only, round-state viewer, not a Battlecode engine.
 
 Supported: the current Battlecode Cap'n Proto binary replay, packed or unpacked, optionally gzipped. Format detection uses file contents, not the filename. A bounded pure-Python reader handles segment tables and single/double far pointers; no native Cap'n Proto installation or schema download is needed.
 
-The decoder applies round starts, tile pearl changes, dragon movement, splits and deaths. The map includes initial bodies, starting queens, fountains, kelp and portal edges. The terminal player shows round-end frames, not every individual action. Sonar overlays, complete action logs and portal-link annotations are outside this viewer's scope. If the server schema changes or a replay is too large, use the official VS Code viewer (`unswbc vscode`).
+The decoder applies round starts, tile pearl changes, dragon movement, splits and deaths. Arena diagnostics count every recorded movement, positive growth, split and death event and read official movement-command/sprint counts, independently of round-end playback sampling. The map includes initial bodies, starting queens, fountains, kelp and portal edges. The terminal player shows round-end frames, not every individual action. Sonar overlays, complete action logs and portal-link annotations are outside this viewer's scope. If the server schema changes or a replay is too large, use the official VS Code viewer (`unswbc vscode`).
 
 ## Portable JSON for tests and exports
 

@@ -2,7 +2,7 @@ import httpx
 import keyring
 import pytest
 
-from battlecode_cli import config
+from battlecode_cli import arena, config, history, replays
 
 
 class MemoryKeyring:
@@ -28,6 +28,8 @@ def private_test_environment(tmp_path, monkeypatch):
     monkeypatch.delenv("UNSWBC_KEY", raising=False)
     monkeypatch.setattr(config, "config_dir", lambda: tmp_path / "config")
     monkeypatch.setattr(config, "data_dir", lambda: tmp_path / "data")
+    for module in (arena, history, replays):
+        monkeypatch.setattr(module, "data_dir", lambda: tmp_path / "data")
     monkeypatch.setattr(config.Path, "home", lambda: tmp_path)
     backend = MemoryKeyring()
     monkeypatch.setattr(keyring, "get_keyring", lambda: backend)

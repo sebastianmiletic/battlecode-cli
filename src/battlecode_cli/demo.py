@@ -12,6 +12,78 @@ TEAM = {
     "rank": 17,
     "peak": 1902,
 }
+TEAM["team"]["history"] = [
+    {"date": f"2026-10-{1 + i // 24:02}T{i % 24:02}:00:00Z", "elo": value, "rank": rank}
+    for i, (value, rank) in enumerate(
+        zip(
+            [
+                1500,
+                1520,
+                1508,
+                1544,
+                1560,
+                1580,
+                1570,
+                1630,
+                1644,
+                1628,
+                1660,
+                1685,
+                1700,
+                1680,
+                1740,
+                1760,
+                1745,
+                1770,
+                1804,
+                1790,
+                1812,
+                1840,
+                1850,
+                1830,
+                1860,
+                1902,
+                1880,
+                1860,
+                1844,
+                1834,
+            ],
+            [
+                54,
+                50,
+                52,
+                45,
+                44,
+                41,
+                43,
+                36,
+                34,
+                38,
+                32,
+                29,
+                28,
+                31,
+                25,
+                23,
+                26,
+                24,
+                20,
+                22,
+                19,
+                18,
+                16,
+                18,
+                15,
+                12,
+                13,
+                15,
+                16,
+                17,
+            ],
+            strict=True,
+        )
+    )
+]
 SUBMISSIONS = [
     {
         "id": 104,
@@ -94,6 +166,14 @@ LADDER = [
         ["Northstar", "Atlas", "Paper crane", "Compass", "Sundial", "Low tide", "Orbit", "Monolith"]
     )
 ]
+for index, team in enumerate(LADDER):
+    team.update(
+        wins=180 - index * 8,
+        draws=3 + index,
+        losses=20 + index * 9,
+        members=[{"username": f"player{index + 1}"}],
+        ranked=True,
+    )
 MAPS = [
     {"id": i + 1, "name": name}
     for i, name in enumerate(["Default", "Devil", "Portals", "Schooltime", "Trophy", "Autarky"])

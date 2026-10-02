@@ -8,7 +8,7 @@ import io
 import json
 import re
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -94,6 +94,7 @@ class Replay:
     frames: tuple[Frame, ...]
     winner: str | None
     end_reason: str
+    diagnostics: dict = field(default_factory=dict)
 
     def summary(self) -> dict:
         final = self.frames[-1]
@@ -220,6 +221,33 @@ class Builder:
         self.splits = [0, 0]
         self.snapshot_units = 0
         self.points: dict[Point, Point] = {}
+        self.command_events = False
+        self.metrics = [
+            {
+                "moves": 0,
+                "growth": 0,
+                "splits": 0,
+                "deaths": {},
+                "queen_death_round": None,
+                "actions": 0,
+                "requested_steps": 0,
+                "sprints": 0,
+                "directions": {},
+            }
+            for _ in (0, 1)
+        ]
+
+    def diagnostics(self) -> dict:
+        return {"A": self.metrics[0], "B": self.metrics[1], "command_events": self.command_events}
+
+    def action(self, ident: int, steps: int = 0) -> None:
+        self.command_events = True
+        dragon = self.dragons.get(ident)
+        if dragon:
+            metrics = self.metrics[dragon.team]
+            metrics["actions"] += 1
+            metrics["requested_steps"] += steps
+            metrics["sprints"] += steps > 1
 
     def point(self, value) -> Point:
         if isinstance(value, Record):
@@ -295,7 +323,23 @@ class Builder:
             if dragon is None:
                 raise ReplayError("Replay updates an unknown dragon.")
             head, tail = self.point(event.get("head")), self.point(event.get("tail"))
-            body = (head, *dragon.body)
+            metrics = self.metrics[dragon.team]
+            metrics["moves"] += 1
+            x, y = dragon.body[0]
+            dx, dy = (head[0] - x) % self.map.width, (head[1] - y) % self.map.height
+            direction = (
+                "east"
+                if dy == 0 and dx == 1
+                else "west"
+                if dy == 0 and dx == self.map.width - 1
+                else "south"
+                if dx == 0 and dy == 1
+                else "north"
+                if dx == 0 and dy == self.map.height - 1
+                else "portal/other"
+            )
+            metrics["directions"][direction] = metrics["directions"].get(direction, 0) + 1
+            body = (head, *dragon.body) if head != dragon.body[0] else dragon.body
             try:
                 last = len(body) - 1 - body[::-1].index(tail)
                 body = body[: last + 1]
@@ -303,6 +347,7 @@ class Builder:
                 body = body[:1]
             if len(body) > MAX_BODY:
                 raise ReplayError("Replay dragon body exceeds the safety limit.")
+            metrics["growth"] += max(0, len(body) - len(dragon.body))
             self.dragons[ident] = Dragon(ident, dragon.team, body)
         elif kind == "dragonSplit":
             parent_id, child_id = integer(event.get("parentId")), integer(event.get("childId"))
@@ -318,6 +363,7 @@ class Builder:
             self.dragons[parent_id] = Dragon(parent_id, team, self.body(event.get("parentBody")))
             self.dragons[child_id] = Dragon(child_id, team, self.body(event.get("childBody")))
             self.splits[team] += 1
+            self.metrics[team]["splits"] += 1
             self.events.append(f"Team {'AB'[team]}: dragon #{parent_id} split, child #{child_id}.")
         elif kind == "dragonDeath":
             ident = integer(event.get("id"))
@@ -329,8 +375,13 @@ class Builder:
                     reason = (
                         DEATH_REASONS[reason] if 0 <= reason < len(DEATH_REASONS) else "unknown"
                     )
+                label = clean_label(reason, 50)
+                metrics = self.metrics[dragon.team]
+                metrics["deaths"][label] = metrics["deaths"].get(label, 0) + 1
+                if ident == self.map.queens[dragon.team]:
+                    metrics["queen_death_round"] = self.round
                 self.events.append(
-                    f"Team {'AB'[dragon.team]}: dragon #{ident} died ({clean_label(reason, 50)}), length {len(dragon.body)}."
+                    f"Team {'AB'[dragon.team]}: dragon #{ident} died ({label}), length {len(dragon.body)}."
                 )
 
     def finish(self) -> tuple[Frame, ...]:
@@ -357,7 +408,7 @@ def decode_binary(raw: bytes) -> Replay:
         if index % 4096 == 0 and time.monotonic() > deadline:
             raise ReplayError("Replay is too complex to decode within the safety limit.")
         kind = event.u16(0)
-        if kind not in (0, 3, 9, 10, 11):
+        if kind not in (0, 3, 4, 9, 10, 11):
             continue
         value = _record(event.pointer(0))
         if kind == 0:
@@ -367,6 +418,16 @@ def decode_binary(raw: bytes) -> Replay:
                 "tileChange",
                 {"tile": value.pointer(0), "hasPearl": bool(value.number(0, "<B") & 1)},
             )
+        elif kind == 4:
+            action = _record(value.pointer(0))
+            directions = action.pointer(0) if action.u16(0) == 0 else None
+            if directions is not None and (
+                not isinstance(directions, List)
+                or directions.size != 3
+                or directions.count > MAX_BODY
+            ):
+                raise ReplayError("Replay movement command is malformed.")
+            builder.action(integer(value.i32(0)), directions.count if directions else 0)
         elif kind == 9:
             builder.apply(
                 "dragonUpdate",
@@ -392,7 +453,7 @@ def decode_binary(raw: bytes) -> Replay:
         reason = {0: "Team eliminated", 1: "Round limit"}.get(result.u16(2), "Game ended")
         if result.u16(4) == 1:
             winner = "AB"[integer(result.u16(6), 0, 1)]
-    return Replay(replay_map, bots, builder.finish(), winner, reason)
+    return Replay(replay_map, bots, builder.finish(), winner, reason, builder.diagnostics())
 
 
 def decode_json(raw: bytes) -> Replay:
@@ -444,6 +505,7 @@ def decode_json(raw: bytes) -> Replay:
         builder.finish(),
         winner,
         clean_label(data.get("end_reason", "Imported replay")),
+        builder.diagnostics(),
     )
 
 

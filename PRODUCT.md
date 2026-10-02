@@ -10,7 +10,7 @@ UNSW Battlecode competitors on macOS, Linux and Windows. They use a terminal bes
 
 ## Product Purpose
 
-One interactive control room for team status, submissions, challenges and replay inspection. Account changes are explicit, exactly one saved account is active, and local replay viewing works without an API key.
+One terminal dashboard for team status, bot versions, local benchmarks, challenges and replay inspection. Six destinations: Overview, Bots, Games, Arena, Leaderboard and API keys. Account changes are explicit, exactly one saved account is active, and local replay viewing works without an API key.
 
 ## Brand Personality
 
@@ -26,7 +26,10 @@ No decorative dashboards, metric-card grids, animated introductions, chromatic s
 2. Verify keys before saving or switching; never silently reconnect after logout.
 3. Preserve context on errors, but clear account-specific state when switching accounts.
 4. Offer keyboard and mouse routes through every workflow.
-5. Keep local replay files local; never invent an unsupported server upload endpoint.
+5. Keep local replay files and custom maps local; never invent an unsupported server upload endpoint.
+6. Separate reproducible local sandbox comparisons from active-bot server challenges.
+7. Show observed and inferred history honestly. Missing records are not fake win rates.
+8. Remove redundant navigation and copy. ELO, rank, results and next actions take precedence.
 
 ## Accessibility & Inclusion
 

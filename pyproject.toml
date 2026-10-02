@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "battlecode-cli"
-version = "0.2.0"
-description = "A monochrome terminal control room for UNSW Battlecode."
+version = "0.3.0"
+description = "A quiet terminal dashboard and local benchmark arena for UNSW Battlecode."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

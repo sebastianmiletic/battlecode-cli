@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import httpx
 import pytest
-from textual.widgets import Button, ContentSwitcher, DataTable, Input, Select, Static
+from textual.widgets import Button, ContentSwitcher, DataTable, Input, Select, Static, TabbedContent
 
 from battlecode_cli.api import APIError, BattlecodeAPI
 from battlecode_cli.app import BattlecodeApp
@@ -62,27 +62,39 @@ async def test_dashboard_navigation_and_details(size):
         table = app.query_one("#game-parts", DataTable)
         assert str(table.get_row_at(0)[3]) == "WIN"
         assert str(table.get_row_at(1)[3]) == "LOSS"
-        for page in ("ladder", "upload", "challenge", "settings", "overview"):
+        for page in ("arena", "leaderboard", "settings", "overview"):
             app.action_view(page)
             await pilot.pause(0.1)
             assert app.query_one("#pages", ContentSwitcher).current == page
+        for alias, page, tabs, pane in (
+            ("upload", "bots", "bot-tabs", "bot-upload"),
+            ("challenge", "arena", "arena-tabs", "arena-online"),
+            ("replays", "games", "game-tabs", "game-local"),
+        ):
+            app.action_view(alias)
+            await pilot.pause(0.1)
+            assert app.query_one("#pages", ContentSwitcher).current == page
+            assert app.query_one(f"#{tabs}", TabbedContent).active == pane
+        app.action_view("overview")
+        await pilot.pause(0.1)
         # Header and nav labels must actually render, not just exist in widgets.
         assert "BATTLECODE" in app.query_one("#wordmark", Static).render().plain
         nav = app.query_one("#nav")
         assert "Overview" in "".join(seg.text for seg in nav.render_line(0))
 
 
-async def test_ladder_search_and_challenge_prefill():
+async def test_leaderboard_search_and_challenge_prefill():
     app = BattlecodeApp(demo=True)
     async with app.run_test(size=(100, 32)) as pilot:
         await pilot.pause(0.2)
-        await pilot.press("4")
+        await pilot.press("5")
         app.query_one("#ladder-search", Input).value = "atlas"
         await pilot.pause(0.2)
         assert app.query_one("#ladder-table", DataTable).row_count == 1
         await pilot.press("tab", "enter")
         await pilot.pause(0.2)
-        assert app.query_one("#pages", ContentSwitcher).current == "challenge"
+        assert app.query_one("#pages", ContentSwitcher).current == "arena"
+        assert app.query_one("#arena-tabs", TabbedContent).active == "arena-online"
         assert app.query_one("#challenge-team", Input).value == "2"
         assert app.query_one("#challenge-mode", Select).value == "practice"
 

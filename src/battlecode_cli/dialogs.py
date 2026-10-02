@@ -88,6 +88,21 @@ class ReplayTree(DirectoryTree):
         ]
 
 
+class MapTree(DirectoryTree):
+    def filter_paths(self, paths):
+        return [
+            p
+            for p in paths
+            if not p.name.startswith(".")
+            and (p.is_dir() or p.suffix.lower() in (".map", ".txt", ".zip"))
+        ]
+
+
+class FolderTree(DirectoryTree):
+    def filter_paths(self, paths):
+        return [p for p in paths if not p.name.startswith(".") and p.is_dir()]
+
+
 class FilePicker(ModalScreen[str | None]):
     BINDINGS = [("escape", "cancel", "Cancel")]
 
@@ -106,18 +121,15 @@ class FilePicker(ModalScreen[str | None]):
         if not root.is_dir():
             root = Path.home()
         with Vertical(classes="dialog file-dialog"):
-            title = (
-                "Choose a local replay file"
-                if self.kind == "replay"
-                else "Choose a bot ZIP or project folder"
-            )
+            title, tree = {
+                "replay": ("Choose a local replay file", ReplayTree),
+                "bot": ("Choose a bot ZIP or project folder", BotTree),
+                "maps": ("Choose maps: folder, ZIP, .map or .txt", MapTree),
+                "directory": ("Choose an export folder", FolderTree),
+            }[self.kind]
             yield Static(title, classes="dialog-title", markup=False)
             yield Input(self.initial or str(root), id="chosen-path")
-            yield (
-                ReplayTree(root, id="file-tree")
-                if self.kind == "replay"
-                else BotTree(root, id="file-tree")
-            )
+            yield tree(root, id="file-tree")
             with Horizontal(classes="actions"):
                 yield Button("Cancel", id="cancel-file")
                 yield Button("Use this path", id="choose-file", classes="primary")

@@ -39,7 +39,7 @@ class BattlecodeAPI:
 
     def _headers(self) -> dict[str, str]:
         if not self.credential:
-            raise APIError("No API key. Connect your account in Settings (7).", 401)
+            raise APIError("No API key. Connect your account in API keys (6).", 401)
         return {
             "Authorization": f"Bearer {self.credential.token}",
             "Origin": SERVER,
