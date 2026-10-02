@@ -45,6 +45,10 @@ def test_folder_obeys_include_and_excludes_build_output(tmp_path):
         "../outside.cpp",
         "/outside.cpp",
         "folder\\main.cpp",
+        "C:/outside.cpp",
+        "main.cpp:secret",
+        ".ENV",
+        "Credentials.json",
         ".env",
         ".env.local",
         "keys.json",
@@ -52,8 +56,12 @@ def test_folder_obeys_include_and_excludes_build_output(tmp_path):
     ],
 )
 def test_unsafe_archive_entries(tmp_path, name):
+    # Construct the raw spelling: Windows' zipfile writer otherwise converts '\\' to '/'.
+    path = archive(tmp_path / "bot.zip", {name.replace("\\", "/"): "secret"})
+    if "\\" in name:
+        path.write_bytes(path.read_bytes().replace(name.replace("\\", "/").encode(), name.encode()))
     with pytest.raises(ValueError, match="Unsafe or sensitive"):
-        prepare_bot(str(archive(tmp_path / "bot.zip", {name: "secret"})))
+        prepare_bot(str(path))
 
 
 def test_symlink_archive_is_refused(tmp_path):

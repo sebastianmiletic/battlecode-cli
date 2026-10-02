@@ -43,11 +43,21 @@ class PreparedBot:
 
 def _safe_name(name: str) -> bool:
     path = PurePosixPath(name)
-    return bool(name) and not path.is_absolute() and ".." not in path.parts and "\\" not in name
+    return (
+        bool(name)
+        and not path.is_absolute()
+        and ".." not in path.parts
+        and "\\" not in name
+        and ":" not in name
+        and not any(ord(char) < 32 for char in name)
+    )
 
 
 def _sensitive(name: str) -> bool:
-    return any(part in SENSITIVE or part.startswith(".env.") for part in PurePosixPath(name).parts)
+    return any(
+        part.casefold() in SENSITIVE or part.casefold().startswith(".env.")
+        for part in PurePosixPath(name).parts
+    )
 
 
 def _project(raw: bytes) -> tuple[str, list[str], str]:
@@ -82,7 +92,13 @@ def _validate(blob: bytes, path: Path) -> PreparedBot:
             if len(names) != len(set(names)):
                 raise ValueError("Archive contains duplicate filenames.")
             for item in archive.infolist():
-                if not _safe_name(item.filename) or _sensitive(item.filename):
+                # ZipInfo normalizes backslashes on Windows and truncates NULs.
+                # Inspect the original archive spelling before those transformations.
+                if (
+                    item.orig_filename != item.filename
+                    or not _safe_name(item.orig_filename)
+                    or _sensitive(item.orig_filename)
+                ):
                     raise ValueError(f"Unsafe or sensitive archive entry: {item.filename}")
                 if stat.S_ISLNK(item.external_attr >> 16) or item.flag_bits & 1:
                     raise ValueError("Symlinks and encrypted archives are not supported.")
