@@ -1,4 +1,5 @@
 from importlib.resources import files
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -298,3 +299,16 @@ async def test_external_account_change_invalidates_pending_upload(account_server
         assert store.active_id == second.id
         assert app.api.credential is None
         assert app.team == {}
+
+
+async def test_late_table_events_ignore_unmounted_sibling_controls():
+    app = BattlecodeApp(demo=True)
+    async with app.run_test(size=(130, 40)) as pilot:
+        await pilot.pause(0.3)
+        await app.query_one("#use-account").remove()
+        await app.query_one("#watch-replay").remove()
+        event = SimpleNamespace(row_key=SimpleNamespace(value="ignored-late-event"))
+        app.account_highlight(event)
+        app.replay_highlight(event)
+        assert app.account_id is None
+        assert app.local_replay_id is None

@@ -979,14 +979,19 @@ class BattlecodeApp(App):
 
     @on(DataTable.RowHighlighted, "#accounts-table")
     def account_highlight(self, event: DataTable.RowHighlighted) -> None:
+        use = self.query_one_optional("#use-account", Button)
+        delete = self.query_one_optional("#delete-account", Button)
+        # A table can deliver queued cursor events while sibling controls are unmounting.
+        if use is None or delete is None:
+            return
         self.account_id = str(event.row_key.value)
         current = self.api.credential.profile_id if self.api.credential else None
-        self.query_one("#use-account", Button).disabled = (
+        use.disabled = (
             self.api.demo
             or self.auth_changing
             or (self.account_id == current and not self.auth_failed)
         )
-        self.query_one("#delete-account", Button).disabled = self.api.demo or self.auth_changing
+        delete.disabled = self.api.demo or self.auth_changing
 
     @on(Input.Submitted, "#api-key")
     @on(Input.Submitted, "#account-label")
@@ -1337,9 +1342,12 @@ class BattlecodeApp(App):
 
     @on(DataTable.RowHighlighted, "#replays-table")
     def replay_highlight(self, event: DataTable.RowHighlighted) -> None:
+        watch = self.query_one_optional("#watch-replay", Button)
+        remove = self.query_one_optional("#remove-replay", Button)
+        if watch is None or remove is None:
+            return
         self.local_replay_id = str(event.row_key.value)
-        self.query_one("#watch-replay", Button).disabled = False
-        self.query_one("#remove-replay", Button).disabled = False
+        watch.disabled = remove.disabled = False
 
     @on(DataTable.RowSelected, "#replays-table")
     def replay_selected(self, event: DataTable.RowSelected) -> None:
