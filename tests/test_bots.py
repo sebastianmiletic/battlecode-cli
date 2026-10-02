@@ -70,7 +70,12 @@ def test_symlink_archive_is_refused(tmp_path):
 def test_folder_symlink_is_refused(tmp_path):
     (tmp_path / "bot.toml").write_bytes(TOML)
     (tmp_path / "original.txt").write_text("source")
-    (tmp_path / "main.cpp").symlink_to(tmp_path / "original.txt")
+    try:
+        (tmp_path / "main.cpp").symlink_to(tmp_path / "original.txt")
+    except OSError:
+        pytest.skip(
+            "Creating symlinks requires Developer Mode or administrator permissions on Windows"
+        )
     with pytest.raises(ValueError, match="symlinks"):
         prepare_bot(str(tmp_path))
 

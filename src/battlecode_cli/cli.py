@@ -3,25 +3,27 @@ from __future__ import annotations
 import argparse
 import asyncio
 import getpass
-import os
+import json
 import sys
 
+from filelock import Timeout as LockTimeout
 from rich.console import Console
 from rich.text import Text
 
 from . import __version__
 from .api import APIError, BattlecodeAPI
-from .config import Credential, clear_credential, config_dir, load_credential, save_credential
+from .config import KEY_PATTERN, AccountStore, Credential, config_dir, importable_credential, redact
 from .models import active_bot, record_label, rows, team_data, winrate
+from .replays import load_replay
 
 
 def parser() -> argparse.ArgumentParser:
     cli = argparse.ArgumentParser(
-        prog="battlecode", description="UNSW Battlecode terminal control room"
+        prog="battlecode-cli", description="UNSW Battlecode terminal control room"
     )
     cli.add_argument("--version", action="version", version=f"battlecode-cli {__version__}")
     cli.add_argument(
-        "--demo", action="store_true", help="Offline, read-only dashboard with synthetic data"
+        "--demo", action="store_true", help="Offline dashboard with synthetic account data"
     )
     cli.add_argument(
         "--refresh",
@@ -32,80 +34,164 @@ def parser() -> argparse.ArgumentParser:
     )
     sub = cli.add_subparsers(dest="command")
     sub.add_parser("status", help="Read-only account summary")
-    auth = sub.add_parser("auth", help="Connect or inspect credentials")
-    auth.add_argument("action", choices=["set", "status", "clear"], default="status", nargs="?")
+    auth = sub.add_parser("auth", help="Manage saved keys; only one account is connected")
     auth.add_argument(
-        "--stdin", action="store_true", help="Read key from stdin instead of a hidden prompt"
+        "action",
+        choices=["set", "add", "import", "list", "use", "status", "delete", "disconnect", "clear"],
+        default="status",
+        nargs="?",
+    )
+    auth.add_argument(
+        "identifier", nargs="?", help="Saved account ID (or unique prefix/label), never an API key"
+    )
+    auth.add_argument("--name", default="", help="A friendly label for a new key")
+    auth.add_argument(
+        "--save-only", action="store_true", help="Save a verified key without connecting it"
+    )
+    auth.add_argument(
+        "--stdin", action="store_true", help="Read a new key from stdin instead of a hidden prompt"
+    )
+    auth.add_argument("--yes", action="store_true", help="Confirm local deletion noninteractively")
+    replay = sub.add_parser("replay", help="Watch a local replay without an API key")
+    replay.add_argument("file", help=".replay, .replay.gz or supported replay JSON")
+    replay.add_argument(
+        "--info",
+        action="store_true",
+        help="Print a read-only replay summary as JSON, without launching the UI",
     )
     return cli
 
 
 async def account_status(console: Console) -> int:
-    api = BattlecodeAPI(load_credential())
+    api = None
     try:
+        credential = AccountStore().active_credential()
+        if not credential:
+            console.print(
+                "No connected account. Open battlecode-cli or run battlecode-cli auth add."
+            )
+            return 1
+        api = BattlecodeAPI(credential)
         team_response, submissions = await asyncio.gather(api.get("/team"), api.get("/submissions"))
         team = team_data(team_response)
         active = active_bot(rows(submissions, "submissions"))
-        console.print(Text(str(team.get("name", "Your team")), style="bold"))
+        console.print(Text(redact(str(team.get("name", "Your team"))), style="bold"))
         console.print(
             Text(
                 f"Rating {team.get('elo', 'n/a')}  ·  Rank #{team_response.get('rank', 'n/a')}  ·  {record_label(team)}"
             )
         )
         console.print(
-            Text(f"Active: {(active or {}).get('name', 'none')}  ·  {winrate(active or {})} wins")
+            Text(
+                redact(
+                    f"Active: {(active or {}).get('name', 'none')}  ·  {winrate(active or {})} wins"
+                )
+            )
         )
         return 0
-    except APIError as error:
-        console.print(Text(str(error)))
+    except (APIError, ValueError, OSError, LockTimeout) as error:
+        console.print(Text(redact(str(error))))
         return 1
     finally:
-        await api.close()
+        if api:
+            await api.close()
 
 
 async def auth_command(args: argparse.Namespace, console: Console) -> int:
-    if args.action == "clear":
-        clear_credential()
-        console.print("App key removed. Environment and unswbc keys are unchanged.")
-        return 0
-    credential = load_credential()
-    if args.action == "set":
-        override = next(
-            (k for k in ("BATTLECODE_API_KEY", "UNSWBC_KEY") if os.environ.get(k)), None
-        )
-        if override:
-            console.print(
-                f"Unset {override} before saving a different key. It overrides saved keys."
-            )
-            return 1
-        token = (
-            sys.stdin.readline().strip()
-            if args.stdin
-            else getpass.getpass("Battlecode API key (hidden): ").strip()
-        )
-        credential = Credential(token, "new key")
-    elif not credential:
-        console.print("No key found. Run battlecode auth set or connect in Settings.")
-        return 1
-    api = BattlecodeAPI(credential)
+    store = AccountStore()
+    api = None
+    token = ""
     try:
-        who = await api.get("/me")
-        if args.action == "set":
-            save_credential(credential.token)
+        if args.action in ("disconnect", "clear"):
+            store.disconnect()
             console.print(
-                Text(f"Key verified and saved in {config_dir()} with owner-only permissions.")
+                "Disconnected. Saved keys remain; no environment or toolkit key will connect automatically."
             )
+            return 0
+        if args.action == "list":
+            active = store.active_id
+            for account in store.accounts():
+                console.print(
+                    Text(
+                        f"{account.id[:8]}  {account.label}  /  {account.team_name}  /  {'ACTIVE' if account.id == active else 'saved'}  /  {account.storage}"
+                    )
+                )
+            if not store.accounts():
+                console.print("No saved keys. Run battlecode-cli auth add.")
+            return 0
+        if args.action in ("use", "delete"):
+            if not args.identifier:
+                raise ValueError(
+                    "Supply a saved account ID or label from battlecode-cli auth list."
+                )
+            account = store.resolve(args.identifier)
+            if args.action == "delete":
+                if not args.yes:
+                    if not sys.stdin.isatty():
+                        raise ValueError("Use --yes to confirm local deletion noninteractively.")
+                    answer = input(
+                        f"Delete local key for {account.label}? Type delete to confirm: "
+                    ).strip()
+                    if answer != "delete":
+                        console.print("Cancelled. No key was deleted.")
+                        return 0
+                store.delete(account.id)
+                console.print(
+                    "Local key deleted. No other key was connected. Revoke it on the team page to disable it everywhere."
+                )
+                return 0
+            credential = store.credential(account.id)
+        elif args.action in ("set", "add", "import"):
+            if args.action == "import":
+                credential = importable_credential()
+                if not credential:
+                    raise ValueError(
+                        "No importable environment/toolkit key was found. Use auth add."
+                    )
+                token = credential.token
+            else:
+                token = (
+                    sys.stdin.readline().strip()
+                    if args.stdin
+                    else getpass.getpass("Battlecode API key (hidden): ").strip()
+                )
+                if not KEY_PATTERN.fullmatch(token):
+                    raise ValueError("Use an API key from your team page, starting with bc_.")
+                credential = Credential(token, "new key")
         else:
-            console.print(Text(f"Key source: {credential.source}"))
-        console.print(Text(f"Connected to {(who.get('team') or {}).get('name', 'your team')}."))
+            credential = store.active_credential()
+            if not credential:
+                raise ValueError(
+                    "No connected account. Open battlecode-cli or run battlecode-cli auth add."
+                )
+        api = BattlecodeAPI(credential)
+        who = await api.get("/me")
+        if args.action in ("set", "add", "import"):
+            account = store.add(token, args.name, who, activate=not args.save_only)
+            if args.action == "import" and credential.source == str(
+                config_dir() / "credentials.json"
+            ):
+                (config_dir() / "credentials.json").unlink(missing_ok=True)
+            console.print(
+                Text(f"Saved {account.label} ({account.id[:8]}), using {account.storage}.")
+            )
+            console.print(
+                "Saved only, not connected."
+                if args.save_only
+                else "Connected. Every other saved key is disconnected."
+            )
+        elif args.action == "use":
+            store.activate(account.id)
+            console.print(Text(f"Connected to {account.label}. This is the only active key."))
+        else:
+            console.print(Text(f"Connected to {(who.get('team') or {}).get('name', 'your team')}."))
         return 0
-    except (APIError, ValueError, OSError) as error:
-        from .config import redact
-
-        console.print(Text(redact(str(error), credential.token)))
+    except (APIError, ValueError, OSError, LockTimeout) as error:
+        console.print(Text(redact(str(error), token)))
         return 1
     finally:
-        await api.close()
+        if api:
+            await api.close()
 
 
 def main() -> None:
@@ -116,13 +202,25 @@ def main() -> None:
             raise SystemExit(asyncio.run(auth_command(args, console)))
         if args.command == "status":
             raise SystemExit(asyncio.run(account_status(console)))
+        if args.command == "replay" and args.info:
+            try:
+                summary = load_replay(args.file).summary()
+                console.print(Text(json.dumps(summary, indent=2, ensure_ascii=True)))
+            except (ValueError, OSError) as error:
+                console.print(Text(redact(str(error))))
+                raise SystemExit(1) from None
+            return
         if not sys.stdin.isatty() or not sys.stdout.isatty():
             console.print(
-                "The dashboard needs an interactive terminal. Use battlecode status for text output."
+                "The dashboard needs an interactive terminal. Use battlecode-cli status or replay FILE --info for text output."
             )
             raise SystemExit(1)
         from .app import BattlecodeApp
 
-        BattlecodeApp(demo=args.demo, refresh=args.refresh).run()
+        BattlecodeApp(
+            demo=args.demo,
+            refresh=args.refresh,
+            replay_path=args.file if args.command == "replay" else None,
+        ).run(mouse=True)
     except KeyboardInterrupt:
         raise SystemExit(130) from None

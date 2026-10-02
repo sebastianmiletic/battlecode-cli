@@ -75,21 +75,49 @@ class BotTree(DirectoryTree):
         ]
 
 
+class ReplayTree(DirectoryTree):
+    def filter_paths(self, paths):
+        return [
+            p
+            for p in paths
+            if not p.name.startswith(".")
+            and (
+                p.is_dir()
+                or p.name.lower().endswith((".replay", ".replay.gz", ".json", ".json.gz"))
+            )
+        ]
+
+
 class FilePicker(ModalScreen[str | None]):
     BINDINGS = [("escape", "cancel", "Cancel")]
 
-    def __init__(self, initial: str = ""):
+    def __init__(self, initial: str = "", *, kind: str = "bot"):
         super().__init__()
-        self.initial = initial
+        self.initial, self.kind = initial, kind
 
     def compose(self) -> ComposeResult:
-        root = Path.home() / "Coding"
+        root = Path.home() / ("Downloads" if self.kind == "replay" else "Coding")
+        if self.initial:
+            candidate = Path(self.initial.strip().strip("\"'")).expanduser()
+            if candidate.is_file():
+                root = candidate.parent
+            elif candidate.is_dir():
+                root = candidate
         if not root.is_dir():
             root = Path.home()
         with Vertical(classes="dialog file-dialog"):
-            yield Static("Choose a bot ZIP or project folder", classes="dialog-title", markup=False)
+            title = (
+                "Choose a local replay file"
+                if self.kind == "replay"
+                else "Choose a bot ZIP or project folder"
+            )
+            yield Static(title, classes="dialog-title", markup=False)
             yield Input(self.initial or str(root), id="chosen-path")
-            yield BotTree(root, id="file-tree")
+            yield (
+                ReplayTree(root, id="file-tree")
+                if self.kind == "replay"
+                else BotTree(root, id="file-tree")
+            )
             with Horizontal(classes="actions"):
                 yield Button("Cancel", id="cancel-file")
                 yield Button("Use this path", id="choose-file", classes="primary")

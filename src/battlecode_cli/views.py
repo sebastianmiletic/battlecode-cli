@@ -20,7 +20,7 @@ class Overview(Vertical):
                 yield DataTable(id="overview-bots", cursor_type="row", zebra_stripes=False)
                 yield Static("Win rate = wins / all completed games.", classes="hint")
         yield Static(
-            "No account connected. Open Settings (7), or try battlecode --demo.",
+            "No account connected. Add an API key in Settings (7), or view local replays (8).",
             id="overview-empty",
             classes="empty",
             markup=False,
@@ -28,6 +28,7 @@ class Overview(Vertical):
         with ActionBar(classes="actions"):
             yield Button("Upload bot", id="home-upload", classes="primary")
             yield Button("Challenge a team", id="home-challenge")
+            yield Button("Local replays", id="home-replays")
 
 
 class ActionBar(HorizontalScroll):
@@ -76,7 +77,7 @@ class Games(Vertical):
         yield DataTable(id="game-parts", cursor_type="row", zebra_stripes=False)
         with ActionBar(classes="actions"):
             yield Button("Download replay", id="download-replay", classes="primary", disabled=True)
-            yield Button("Open replay", id="open-replay", disabled=True)
+            yield Button("View replay", id="open-replay", disabled=True)
             yield Button("View on web", id="view-game", disabled=True)
             yield Button("Judge log", id="game-log", disabled=True)
 
@@ -161,29 +162,70 @@ class Challenge(VerticalScroll):
 class Settings(VerticalScroll):
     def compose(self) -> ComposeResult:
         yield Static("ACCOUNT", classes="eyebrow")
-        yield Static("Connection & settings", classes="page-title")
+        yield Static("API keys & accounts", id="settings-title", classes="page-title", markup=False)
+        yield Static("", id="connection-summary", classes="form-note", markup=False)
+        yield Static("Saved API keys", id="saved-keys-title", classes="section-title")
+        yield DataTable(id="accounts-table", cursor_type="row", zebra_stripes=False)
         yield Static(
-            "Checking saved credentials…",
-            id="connection-summary",
+            "No saved keys. Add your first Battlecode API key below.",
+            id="accounts-empty",
             classes="form-note",
             markup=False,
         )
+        with ActionBar(classes="actions"):
+            yield Button("Use selected", id="use-account", classes="primary", disabled=True)
+            yield Button("Disconnect", id="disconnect-account", disabled=True)
+            yield Button("Delete key", id="delete-account", disabled=True)
+            yield Button("Open team page", id="team-page")
+            yield Button("Continue offline", id="continue-offline")
         yield Static("New API key", classes="field-label")
-        yield Input(placeholder="bc_… (hidden, never logged)", id="api-key", password=True)
+        yield Input(
+            placeholder="Paste bc_… (hidden). Enter to connect.", id="api-key", password=True
+        )
+        yield Static("Account label (optional)", classes="field-label")
+        yield Input(
+            placeholder="e.g. Main team, defaults to your verified team name",
+            id="account-label",
+            max_length=64,
+        )
         with ActionBar(classes="actions"):
             yield Button("Connect & save", id="connect-key", classes="primary")
-            yield Button("Open team page", id="team-page")
-            yield Button("Forget app key", id="forget-key")
+            yield Button("Save only", id="save-key")
+            yield Button("Import existing key", id="import-key")
         yield Static(
-            "Make a key on your team page. Creating a new key invalidates the old one.",
-            classes="hint",
+            "Make a key on your team page. Only one saved key can be connected. Deleting here removes the local key; revoke it on the website to disable it everywhere.",
+            classes="form-note",
+            markup=False,
         )
         yield Static("", id="settings-status", classes="form-status", markup=False)
         yield Static("LOCAL FILES", classes="section-title")
         yield Static("", id="local-paths", classes="form-note", markup=False)
         yield Static("SAFE BY DEFAULT", classes="section-title")
         yield Static(
-            "Every upload, challenge and bot switch requires confirmation.\nPractice is the default. Writes are never retried automatically.\nKeys stay outside this repository. Signed downloads never receive your key.",
+            "Uploads, bot switches and challenges require confirmation. Practice is the default. API keys are kept in your OS keyring when available. Linux/macOS without a keyring use owner-only, unencrypted files. Windows requires Credential Manager. No automatic key fallback after disconnecting.",
             classes="form-note",
             markup=False,
         )
+
+
+class Replays(Vertical):
+    def compose(self) -> ComposeResult:
+        yield Static("LOCAL LIBRARY", classes="eyebrow")
+        yield Static("Replays", classes="page-title")
+        yield Static("Click or Enter a replay to watch it. No API key needed.", classes="hint")
+        yield DataTable(id="replays-table", cursor_type="row", zebra_stripes=False)
+        yield Static(
+            "Import a .replay or .replay.gz file, or try the sample below. Files stay on your computer.",
+            id="replays-empty",
+            classes="empty",
+            markup=False,
+        )
+        with Horizontal(id="replay-path-row"):
+            yield Input(placeholder="Path to a replay file", id="replay-path")
+            yield Button("Browse", id="browse-replay")
+        yield Static("", id="replays-status", classes="form-status", markup=False)
+        with ActionBar(classes="actions"):
+            yield Button("Import replay", id="import-replay", classes="primary")
+            yield Button("Watch selected", id="watch-replay", disabled=True)
+            yield Button("Remove", id="remove-replay", disabled=True)
+            yield Button("Try sample", id="sample-replay")

@@ -14,8 +14,12 @@ Persistent masthead, numbered navigation, one work surface, one status line and 
 
 ## Type and interaction
 
-Use the terminal's own monospace. Bold for team names, section titles and selected rows; muted text for supporting explanations. Navigation is numbered 1 through 7. Tab order follows the visual form order. Enter inspects table rows. Inputs keep typing precedence over navigation shortcuts. No mouse requirement and no color-only signals.
+Use the terminal's own monospace. Bold for team names, section titles and selected rows; muted text for supporting explanations. Navigation is numbered 1 through 8. Tab order follows the visual form order. Enter inspects table rows. Inputs keep typing precedence over navigation shortcuts. Sidebar, table rows, buttons, selectors and replay timeline support mouse input; keyboard access remains complete. No color-only signals.
 
 ## States
 
-Keep last successful data during a failed refresh and mark it stale. A rejected credential moves first-time users to Settings and pauses polling. Empty tables offer a next action. Background tasks do not block navigation. Demo data is always labelled and mutations are blocked. Confirmations default to Cancel; practice is the default challenge mode. API writes are never automatically retried.
+Keep last successful data during a failed refresh and mark it stale. A rejected credential moves first-time users to Settings and pauses polling. Empty tables offer a next action. Background tasks do not block navigation. Demo data is always labelled and server mutations and key management are blocked. First launch without a connected account focuses a hidden API-key field; offline replay viewing is one click away. Saved profiles have one active ID, and disconnect/delete never activate a fallback. Account changes clear cached data and invalidate pending writes. Confirmations default to Cancel; practice is the default challenge mode. API writes are never automatically retried.
+
+## Replay surface
+
+Use a full-screen map viewport with a compact, stable toolbar, clickable/draggable timeline, named A/B symbols, statistics and a tile inspector. Detailed mode draws terrain edges; compact mode explicitly labels that edges are hidden. Playback changes only after user action. Frame numbers and round numbers are distinct. Files are local copies, not server uploads.

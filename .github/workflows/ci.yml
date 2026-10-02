@@ -1,14 +1,18 @@
 name: Tests
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.11", "3.13"]
     steps:
       - uses: actions/checkout@v4
@@ -20,3 +24,28 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
+      - run: uv build
+      - name: Install user command (macOS / Linux)
+        if: runner.os != 'Windows' && matrix.python-version == '3.13'
+        run: |
+          sh ./install.sh
+          BIN=$(uv tool dir --bin)
+          "$BIN/battlecode-cli" --version
+          "$BIN/battlecode" --version
+          "$BIN/battlecode-cli" replay src/battlecode_cli/assets/sample.replay.json --info
+      - name: Install user command (Windows)
+        if: runner.os == 'Windows' && matrix.python-version == '3.13'
+        shell: pwsh
+        run: |
+          .\install.ps1
+          $Bin = (uv tool dir --bin).Trim()
+          & (Join-Path $Bin 'battlecode-cli.exe') --version
+          & (Join-Path $Bin 'battlecode.exe') --version
+          & (Join-Path $Bin 'battlecode-cli.exe') replay src/battlecode_cli/assets/sample.replay.json --info
+      - name: Check PowerShell syntax (including Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $Tokens = $null; $Errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'install.ps1'), [ref]$Tokens, [ref]$Errors) | Out-Null
+          if ($Errors.Count) { $Errors | Format-List; exit 1 }

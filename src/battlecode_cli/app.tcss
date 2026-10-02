@@ -65,7 +65,7 @@ Button.primary { background: #e8e8e8; color: #101010; text-style: bold; }
 Button.primary:hover { background: #cccccc; }
 Button.primary:disabled { background: #252525; color: #666666; }
 Button:disabled { color: #666666; background: #161616; }
-Input, Select {
+Input {
     height: 3;
     max-width: 86;
     background: #161616;
@@ -73,10 +73,12 @@ Input, Select {
     border: solid #454545;
     padding: 0 1;
 }
-Input:focus, Select:focus { border: solid #d0d0d0; }
+Input:focus { border: solid #d0d0d0; }
+Select { height: 3; max-width: 86; border: none; padding: 0; background: #161616; }
+Select:focus > SelectCurrent { border: solid #d0d0d0; }
 Input > .input--placeholder { color: #777777; }
 SelectOverlay { background: #202020; border: solid #777777; }
-SelectCurrent { background: #161616; }
+SelectCurrent { height: 3; padding: 0 1; border: solid #454545; background: #161616; color: #e8e8e8; }
 SelectOverlay > .option-list--option-highlighted { color: #101010; background: #e8e8e8; }
 SelectionList {
     height: 7;
@@ -126,3 +128,30 @@ ModalScreen { background: #0c0c0c 85%; align: center middle; }
 #file-tree { height: 1fr; background: #161616; margin-top: 1; }
 Toast { background: #242424; color: #eeeeee; border: solid #777777; }
 LoadingIndicator { color: #cccccc; }
+#accounts-table { height: 7; margin-top: 1; }
+#accounts-empty { margin-top: 0; }
+#replays-table { min-height: 4; }
+#replay-path-row { height: 3; margin-top: 1; }
+#replay-path { width: 1fr; }
+#browse-replay { margin-left: 1; margin-right: 0; }
+.short #replays .hint { display: none; }
+.replay-screen { padding: 0; }
+#replay-heading, #replay-stats, #replay-legend, #replay-viewport,
+#replay-inspector, #replay-timeline, #replay-position, #replay-buttons,
+#replay-options { margin: 0 1; }
+#replay-heading { height: 1; text-style: bold; }
+#replay-stats { height: 2; color: #d0d0d0; }
+#replay-legend { height: 1; color: #909090; }
+#replay-viewport { height: 1fr; border: solid #333333; overflow: auto auto; scrollbar-size: 1 1; }
+#replay-board { background: #0c0c0c; padding: 0; }
+#replay-inspector { height: 1; color: #b0b0b0; }
+#replay-timeline { height: 1; background: #161616; }
+#replay-timeline:focus { background: #242424; }
+#replay-position { height: 1; color: #b0b0b0; }
+#replay-buttons { height: 3; margin-top: 0; }
+#replay-options { height: 3; }
+.replay-screen Button { min-width: 7; padding: 0 1; }
+#replay-mode { width: 27; margin-right: 1; }
+#replay-speed { width: 20; margin-right: 1; }
+#replay-jump { width: 13; margin-right: 1; }
+#replay-go { min-width: 7; }

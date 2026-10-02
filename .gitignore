@@ -11,5 +11,11 @@ build/
 credentials.json
 keys.json
 *.replay
+*.replay.gz
+*.replay.json
+!src/battlecode_cli/assets/sample.replay.json
+accounts.json
+library.json
+*.key
 *.zip
 .DS_Store

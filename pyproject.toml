@@ -4,19 +4,22 @@ build-backend = "hatchling.build"
 
 [project]
 name = "battlecode-cli"
-version = "0.1.0"
+version = "0.2.0"
 description = "A monochrome terminal control room for UNSW Battlecode."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "Sebastian Miletic" }]
 dependencies = [
-    "textual>=6.0,<9",
+    "textual>=8.2.8,<9",
     "httpx>=0.28,<1",
     "platformdirs>=4,<5",
+    "keyring>=25,<26",
+    "filelock>=3.18,<4",
 ]
 
 [project.scripts]
+battlecode-cli = "battlecode_cli.cli:main"
 battlecode = "battlecode_cli.cli:main"
 
 [project.urls]
