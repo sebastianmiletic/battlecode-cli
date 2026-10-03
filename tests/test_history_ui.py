@@ -20,8 +20,9 @@ from battlecode_cli.replays import decode_replay
 async def wait_for_screen(app, pilot, screen_type):
     # Preparing snapshots can outlast a short UI pause on Windows.
     async with asyncio.timeout(10):
-        while not isinstance(app.screen, screen_type):
+        while not isinstance(app.screen, screen_type) or not app.screen.is_mounted:
             await pilot.pause(0.05)
+        await pilot.pause()
 
 
 def test_history_uses_server_elo_and_marks_reconstructed_rank_as_inferred():

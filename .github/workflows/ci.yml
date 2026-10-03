@@ -9,6 +9,7 @@ permissions:
 jobs:
   browser:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -25,6 +26,7 @@ jobs:
           path: /tmp/battlecode-browser-check
   test:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -39,7 +41,7 @@ jobs:
       - run: uv sync --locked --group dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest -q
+      - run: uv run pytest -v
       - run: uv build
       - name: Install user command (macOS / Linux)
         if: runner.os != 'Windows' && matrix.python-version == '3.13'
