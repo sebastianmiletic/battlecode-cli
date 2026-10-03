@@ -1,3 +1,4 @@
+import time
 from importlib.resources import files
 from types import SimpleNamespace
 
@@ -223,10 +224,18 @@ async def test_mouse_navigation_replay_playback_seek_inspection_and_back(size, t
         assert app.query_one("#game-tabs", TabbedContent).active == "game-local"
 
 
-async def test_import_picker_library_and_confirmed_removal(tmp_path):
+async def test_import_picker_library_and_confirmed_removal(tmp_path, monkeypatch):
     source = tmp_path / "game with spaces.replay"
     source.write_bytes(files("battlecode_cli").joinpath("assets/sample.replay.json").read_bytes())
     library = ReplayLibrary(tmp_path / "library")
+    remove = library.remove
+
+    def slow_remove(identifier):
+        # Model slower Windows/antivirus I/O; confirmation is not disk completion.
+        time.sleep(0.35)
+        remove(identifier)
+
+    monkeypatch.setattr(library, "remove", slow_remove)
     app = BattlecodeApp(library=library)
     async with app.run_test(size=(130, 44)) as pilot:
         await pilot.pause(0.1)
@@ -250,7 +259,8 @@ async def test_import_picker_library_and_confirmed_removal(tmp_path):
         assert len(library.entries()) == 1
         await visible_click(app, pilot, "#remove-replay")
         await pilot.click("#accept-confirm")
-        await pilot.pause(0.2)
+        await app.workers.wait_for_complete()
+        await pilot.pause()
         assert library.entries() == []
         assert source.exists()
         assert app.query_one("#replays-table", DataTable).row_count == 0

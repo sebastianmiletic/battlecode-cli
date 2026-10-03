@@ -1,4 +1,5 @@
 import asyncio
+import time
 from importlib.resources import files
 
 import httpx
@@ -15,6 +16,7 @@ from textual.widgets import (
     Tree,
 )
 
+from battlecode_cli import map_editor
 from battlecode_cli.app import BattlecodeApp
 from battlecode_cli.demo import DemoAPI
 from battlecode_cli.dialogs import Confirm
@@ -256,7 +258,15 @@ def test_editor_validates_counts_portal_pairs_starting_bodies_and_source_bounds(
 
 
 @pytest.mark.parametrize("size", [(80, 24), (130, 40)])
-async def test_editor_keyboard_brush_undo_and_confirmed_local_save(size, tmp_path):
+async def test_editor_keyboard_brush_undo_and_confirmed_local_save(size, tmp_path, monkeypatch):
+    save = map_editor.atomic_write
+
+    def slow_save(destination, content):
+        # Windows can take longer to flush/replace files than a UI pause.
+        time.sleep(0.35)
+        save(destination, content)
+
+    monkeypatch.setattr(map_editor, "atomic_write", slow_save)
     app = BattlecodeApp(demo=True)
     destination = tmp_path / "created.map"
     async with app.run_test(size=size) as pilot:
@@ -281,11 +291,13 @@ async def test_editor_keyboard_brush_undo_and_confirmed_local_save(size, tmp_pat
         await pilot.pause(0.1)
         assert isinstance(app.screen, Confirm)
         await pilot.press("escape")
+        await app.workers.wait_for_complete()
         assert not destination.exists()
         await pilot.click("#editor-save")
         await pilot.pause(0.1)
         await pilot.click("#accept-confirm")
-        await pilot.pause(0.15)
+        await app.workers.wait_for_complete()
+        await pilot.pause()
         assert destination.is_file()
         assert validate_map(destination.read_text()).width == 16
 
