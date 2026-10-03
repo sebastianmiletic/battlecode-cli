@@ -1,4 +1,5 @@
 import asyncio
+import time
 import uuid
 from importlib.resources import files
 
@@ -12,7 +13,15 @@ from battlecode_cli.demo import DemoAPI
 from battlecode_cli.dialogs import Confirm, TextViewer
 from battlecode_cli.history import HistoryStore, histories, series
 from battlecode_cli.models import leaderboard_rows, members_label, winrate
+from battlecode_cli.replay_viewer import ReplayViewer
 from battlecode_cli.replays import decode_replay
+
+
+async def wait_for_screen(app, pilot, screen_type):
+    # Preparing snapshots can outlast a short UI pause on Windows.
+    async with asyncio.timeout(10):
+        while not isinstance(app.screen, screen_type):
+            await pilot.pause(0.05)
 
 
 def test_history_uses_server_elo_and_marks_reconstructed_rank_as_inferred():
@@ -173,6 +182,13 @@ async def test_arena_review_cancel_results_and_report_without_server_mutations(
     import battlecode_cli.arena_ui as arena_ui
 
     monkeypatch.setattr(arena_ui, "runner_path", lambda: "fixture-runner")
+    prepare = arena_ui.bot_version
+
+    def slow_prepare(*args, **kwargs):
+        time.sleep(0.35)
+        return prepare(*args, **kwargs)
+
+    monkeypatch.setattr(arena_ui, "bot_version", slow_prepare)
     executed = []
 
     class FixtureRunner(ArenaRunner):
@@ -230,30 +246,27 @@ async def test_arena_review_cancel_results_and_report_without_server_mutations(
         app.query_one("#arena-bot-b", Input).value = str(tmp_path / "beta")
         await pilot.pause(0.1)
         assert await pilot.click("#arena-run")
-        await pilot.pause(0.2)
-        assert isinstance(app.screen, Confirm)
+        await wait_for_screen(app, pilot, Confirm)
         assert executed == []
         await pilot.press("escape")
-        await pilot.pause(0.1)
+        await app.workers.wait_for_complete()
+        await pilot.pause()
         assert executed == []
-        await pilot.click("#arena-run")
-        await pilot.pause(0.2)
+        assert await pilot.click("#arena-run")
+        await wait_for_screen(app, pilot, Confirm)
         await pilot.click("#accept-confirm")
-        await pilot.pause(0.3)
+        await app.workers.wait_for_complete()
+        await pilot.pause()
         assert len(executed) == 1
         assert app.query_one("#arena-tabs", TabbedContent).active == "arena-results"
         assert app.query_one("#arena-results-table", DataTable).row_count == 1
         assert not app.query_one("#arena-replay", Button).disabled
         await pilot.click("#arena-report")
-        await pilot.pause(0.1)
-        assert isinstance(app.screen, TextViewer)
+        await wait_for_screen(app, pilot, TextViewer)
         assert "PER-MAP RECORDS" in app.screen.text
         await pilot.press("escape")
         await pilot.click("#arena-replay")
-        await pilot.pause(0.3)
-        from battlecode_cli.replay_viewer import ReplayViewer
-
-        assert isinstance(app.screen, ReplayViewer)
+        await wait_for_screen(app, pilot, ReplayViewer)
         await pilot.press("escape")
         assert len(app.library.entries()) == 1
 
@@ -294,15 +307,14 @@ async def test_exports_confirm_and_escape_formula_text(tmp_path):
     async with app.run_test(size=(100, 32)) as pilot:
         await pilot.pause(0.2)
         app.export_arena(str(destination))
-        await pilot.pause(0.2)
-        assert isinstance(app.screen, Confirm)
+        await wait_for_screen(app, pilot, Confirm)
         await pilot.press("escape")
-        await pilot.pause(0.1)
+        await app.workers.wait_for_complete()
         assert not destination.exists()
         app.export_arena(str(destination))
-        await pilot.pause(0.2)
+        await wait_for_screen(app, pilot, Confirm)
         await pilot.click("#accept-confirm")
-        await pilot.pause(0.3)
+        await app.workers.wait_for_complete()
         structured = json.loads((destination / "arena-bbbbbbbb.json").read_text())
         assert len(structured["games"]) == 1
         with (destination / "arena-bbbbbbbb.csv").open(newline="") as handle:
