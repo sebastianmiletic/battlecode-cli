@@ -138,6 +138,7 @@ Markdown { background: $background; }
 #editor-direction { width: 14; margin-right: 1; }
 #editor-symmetry { width: 20; }
 #editor-new { min-width: 5; width: 7; padding: 0 1; margin: 0; }
+#map-editor .actions { height: 4; }
 #editor-tabs { height: 1fr; }
 #editor-viewport { height: 1fr; border: solid #262b33; overflow: auto auto; scrollbar-size: 1 1; }
 #editor-board { padding: 0; background: $background; }

@@ -155,6 +155,8 @@ class BattlecodeApp(SiteActions, ArenaActions, App):
         replay_path: str | None = None,
     ):
         super().__init__()
+        # Replay playback is explicit; focus/scroll changes should settle immediately.
+        self.animation_level = "none"
         self.accounts = accounts or AccountStore()
         self.library = library or ReplayLibrary()
         self.account_id: str | None = None

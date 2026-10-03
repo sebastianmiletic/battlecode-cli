@@ -287,13 +287,16 @@ async def test_editor_keyboard_brush_undo_and_confirmed_local_save(size, tmp_pat
         app.query_one("#editor-path", Input).value = str(destination)
         app.query_one("#editor-save", Button).scroll_visible(animate=False)
         await pilot.pause(0.1)
-        await pilot.click("#editor-save")
+        assert await pilot.click("#editor-save")
         await pilot.pause(0.1)
         assert isinstance(app.screen, Confirm)
         await pilot.press("escape")
         await app.workers.wait_for_complete()
+        await pilot.pause()
         assert not destination.exists()
-        await pilot.click("#editor-save")
+        assert app.focused is app.query_one("#editor-save", Button)
+        assert app.screen.can_view_entire(app.focused)
+        assert await pilot.click("#editor-save")
         await pilot.pause(0.1)
         await pilot.click("#accept-confirm")
         await app.workers.wait_for_complete()
@@ -350,7 +353,8 @@ async def test_editor_add_to_arena_needs_confirmation_and_never_starts_execution
         await pilot.press("enter")
         await pilot.pause(0.1)
         await pilot.click("#accept-confirm")
-        await pilot.pause(0.15)
+        await app.workers.wait_for_complete()
+        await pilot.pause()
         assert app.query_one("#pages", ContentSwitcher).current == "arena"
         assert app.query_one("#arena-map-source", Select).value == "custom"
         assert sum("custom" in item["origins"] for item in app.arena_maps.entries()) == 1
@@ -371,7 +375,8 @@ async def test_editor_rejects_changed_destination_between_review_and_save(tmp_pa
         assert isinstance(app.screen, Confirm)
         destination.write_text("External file created during review")
         await pilot.click("#accept-confirm")
-        await pilot.pause(0.1)
+        await app.workers.wait_for_complete()
+        await pilot.pause()
         assert destination.read_text() == "External file created during review"
         assert "Destination changed" in str(app.query_one("#editor-status", Static).render())
 

@@ -487,11 +487,12 @@ class MapEditor(Vertical):
         if value:
             self.query_one("#editor-path", Input).value = value
 
-    def begin_operation(self):
+    def begin_operation(self, action):
         if self.busy:
             return False
         self.busy = True
-        self.return_focus = self.app.focused
+        # Mouse focus may still be queued when the button's worker starts.
+        self.return_focus = self.query_one("#" + action, Button)
         for ident in ("editor-new", "editor-load", "editor-save", "editor-arena"):
             self.query_one("#" + ident, Button).disabled = True
         return True
@@ -507,11 +508,12 @@ class MapEditor(Vertical):
             pages = self.app.query_one_optional("#pages", ContentSwitcher)
             if pages and pages.current == "map-editor" and len(self.app.screen_stack) == 1:
                 if self.return_focus and self.return_focus.is_mounted:
-                    self.return_focus.focus()
+                    self.return_focus.focus(scroll_visible=False)
+                    self.return_focus.scroll_visible(animate=False)
 
     @work(group="map-editor")
     async def new_review(self):
-        if not self.begin_operation():
+        if not self.begin_operation("editor-new"):
             return
         try:
             text = new_map(
@@ -536,7 +538,7 @@ class MapEditor(Vertical):
 
     @work(group="map-editor")
     async def load_map(self):
-        if not self.begin_operation():
+        if not self.begin_operation("editor-load"):
             return
         try:
             path = path_value(self.query_one("#editor-path", Input).value)
@@ -562,7 +564,7 @@ class MapEditor(Vertical):
 
     @work(group="map-editor")
     async def save_map(self):
-        if not self.begin_operation():
+        if not self.begin_operation("editor-save"):
             return
         try:
             text = self.text
@@ -605,7 +607,7 @@ class MapEditor(Vertical):
 
     @work(group="map-editor")
     async def add_to_arena(self):
-        if not self.begin_operation():
+        if not self.begin_operation("editor-arena"):
             return
         try:
             text = self.text
