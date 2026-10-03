@@ -41,7 +41,7 @@ async def test_auth_error_is_actionable_and_redacted():
     with pytest.raises(APIError) as caught:
         await api.get("/team")
     assert caught.value.status == 401
-    assert "Settings" in str(caught.value)
+    assert "API keys (6)" in str(caught.value)
     assert KEY not in str(caught.value)
     await api.close()
 

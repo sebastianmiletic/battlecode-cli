@@ -2,30 +2,48 @@
 
 ## Scene
 
-A Battlecode competitor sits at a laptop with an existing terminal session, inspecting bot results and preparing the next practice match. The requested black-and-white interface stays quiet beside their code and gives potentially rating-changing actions explicit weight.
+A competitor inspects bot results in a dim evening workspace beside a code editor. The terminal reproduces the supplied dark Battlecode site; a light theme is available for daylight use. Operational facts and potentially rating-changing actions take priority over decoration.
 
 ## Palette
 
-Monochrome by request. Near-black canvas `#0c0c0c`, navigation `#121212`, input surface `#161616`, table headings `#202020`, rules `#333333`, muted copy `#909090`, body `#e8e8e8`. Selection inverts the body and canvas. No gradients, chromatic success/error cues or decorative animation. Errors and match outcomes are always named in text.
+Match the saved website's dark tokens: canvas `#0b0d10`, sidebar/input surface `#15181d`, raised surface `#1c2026`, rules `#262b33`, body `#eceef1`, muted copy `#8b93a0`, primary/focus `#5fded2`, chart mint `#9ed8cb`, named success `#3ecf7a` and error `#f0605a`. Accent use is restrained. Light mode uses cool near-white surfaces and darker mint/semantic colors for contrast. No gradients or color-only outcome signals.
 
 ## Layout
 
-Persistent masthead, six numbered destinations, one work surface, one status line and a keyboard footer. The top-right project link replaces connection/setup chrome; account state stays in API keys and the status line. Overview places large, heavy three-line ELO/rank numerals above two time-scaled history plots, without metric cards. Bots combines Versions/Upload tabs; Games combines Matches/Local replays; Arena combines Benchmark/Online/Results. Forms scroll vertically. Action bars and wider tables scroll horizontally. Benchmark review/stop remains reachable at 80×24.
+Persistent website-style sidebar with Overview/Updates, Compete, Build and Manage groups. Arena is immediately beneath Submissions. Keep the sidebar scrollable at 80×24; Ctrl+B reduces it to a three-cell restore rail. Main heading includes the project link and explicit opponent action, followed by one work surface, a status line and keyboard footer.
+
+Overview has a divided facts row, recent battles and nearby returned ladder, then rating/rank history panels. Team profiles follow the saved page's facts/charts/recent-battles/member structure, with eligibility, join-request and settings tabs. Missing or unavailable fields display n/a; do not embed reference-team data. Initial profile focus must not scroll past the facts row.
+
+Submissions retains Versions/Upload; Games distinguishes All games, Your games and local replays; Arena retains Simulation/Online/Results. Public match tables have search, mode filters and server-page pagination. Tournaments expose a bounded expandable bracket with battle links. Documentation has the complete 23-topic outline, local original technical notes and inert-text refresh of the current official article.
+
+The map editor has terrain/queen brushes, edge direction, spawn gaps, portal pair ID, a scrollable coordinate board and full source editing. Undo/redo, count normalization, validation, preview, confirmed saves and confirmed Arena imports remain available in compact layouts. Validation errors are always visible. Direct source editing retains official-format directives, including END when present.
+
+Forms scroll vertically; action bars and wider tables scroll horizontally. Fixed-size charts must not push the primary table/actions outside an 80×24 screen. Compact pages stack profile/overview panels, shorten charts and preserve map/replay transport controls.
 
 ## Type and interaction
 
-Use the terminal's own monospace. Bold for team names, section titles and selected rows; muted text for supporting explanations. Navigation is numbered 1 through 6. Tab order follows the visual form order. Enter inspects table rows. Inputs keep typing precedence over navigation shortcuts. Sidebar, table rows, buttons, selectors and replay timeline support mouse input; keyboard access remains complete. No color-only signals.
+Use the terminal's own monospace. Bold headings/selection and heavy three-line rating/rank figures establish hierarchy. The sidebar labels mirror the website, while shortcuts 1–6 remain Overview, Submissions, Your games, Arena, Leaderboard and API keys. Tab order follows visible controls; Enter opens team/submission/battle details. Inputs keep typing precedence. Ctrl+B/Ctrl+T/Ctrl+K remain available from text controls. Mouse and wheel access is supplementary, never required.
 
-## States
+## States and account boundaries
 
-Keep last successful data during a failed refresh and mark it stale. A rejected credential moves first-time users to Settings and pauses polling. Empty tables offer a next action. Background tasks do not block navigation. Demo data is always labelled and server mutations and key management are blocked. First launch without a connected account focuses a hidden API-key field; offline replay viewing is one click away. Saved profiles have one active ID, and disconnect/delete never activate a fallback. Account changes clear cached data and invalidate pending writes. Confirmations default to Cancel; practice is the default challenge mode. API writes are never automatically retried.
+Keep successful snapshots during read failures and mark stale/error states. Rejected keys pause polling. Empty states offer a useful next action. Background work must not reopen hidden panes or steal focus after navigation. Demo is labelled, fully synthetic, credential-free, and unable to mutate server/accounts.
+
+First launch without an account focuses hidden key entry. Exactly one saved profile is active; disconnect/delete never choose a fallback. Account changes clear team/submission/battle/member/rating/directory/bracket data and cancel pending account-bound reads. Verify before saving/switching. Consequential reviews default to Cancel; server writes are never retried automatically. Team settings, stars, membership and account changes are website-only, with explicit links rather than invented API operations.
 
 ## Arena and history
 
-Local benchmarks require explicit review and use the official judge sandbox, never a native fallback. Both seats and repeatable seeds are defaults. Custom map imports stay local; private opponent source is not promised. Live progress, saved batches, per-map records, complete recorded-move diagnostics and confirmed exports share one Results tab. Interrupted batches keep completed results. Advice is rule-based and names uncertainty.
+Only the official judge sandbox runs bots. Both seats and repeatable seeds are defaults. Fifteen unchanged official maps are bundled offline; map sets and checkbox subsets are native terminal controls. Source/map snapshots, sequential execution, stop, saved batches, recorded diagnostics and reviewed exports preserve reproducibility. Finished-game replay copies are automatically added to the local library, with originals retained if library copying fails.
 
-History uses server data and local observations. Reconstructed rank is labelled inferred because past eligibility and tie ordering are unavailable. Empty history is named, not drawn as fake data. The leaderboard lists all returned teams/members, ELO and win rate only when a denominator exists.
+Local game/history/replay labels are Simulation, never Unranked. Your games includes a bounded local Simulation index; complete original batches remain in Arena Results. Private opponent source is not promised. Reports distinguish recorded movement/deaths/queen timing from causal strategy claims or AI advice.
+
+Charts use server history or clearly described local observations. Reconstructed ranks use today's eligible teams and are labelled inferred. Missing history is named, not drawn as invented points. Win rate requires wins + draws + losses; incomplete and empty records display n/a.
+
+## Browser companion
+
+The optional six-page browser dashboard follows the earlier reference layout with the supplied unchanged PNG and bundled Instrument Sans, IBM Plex Mono and Martian Mono fonts. Keep all licenses and trademark notices. Its fixed sidebar, divided facts row, tables/charts and responsive mobile navigation are separate from the full native TUI navigation.
+
+Use native controls and approval dialogs, with Cancel initially focused. Host/Origin/session/CSRF/CSP protections keep the server loopback-only. Escape untrusted text. Saved keys never go into URLs, localStorage or JavaScript state. Source files, keys and user reference files must not enter documentation screenshots.
 
 ## Replay surface
 
-Use a full-screen map viewport with a compact, stable toolbar, clickable/draggable timeline, named A/B symbols, statistics and a tile inspector. Detailed mode draws terrain edges; compact mode explicitly labels that edges are hidden. Playback changes only after user action. Frame numbers and round numbers are distinct. Files are local copies, not server uploads.
+A full-screen map viewport has stable transport, clickable/draggable timeline, speed, frame jump, statistics and tile inspection. A/B heads and Q/R queens remain distinguishable without color. Detailed mode draws edges; compact mode explicitly hides them. Light/dark themes preserve contrast. Playback shows round-end states, not an action-by-action simulator. Sonar overlays and portal-link annotations are not implemented.

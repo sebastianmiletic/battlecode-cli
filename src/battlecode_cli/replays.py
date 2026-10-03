@@ -8,7 +8,7 @@ import io
 import json
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -567,6 +567,8 @@ class ReplayLibrary:
                 ):
                     raise ValueError
                 integer(entry.get("rounds"), 0, MAX_FRAMES - 1)
+                if entry.get("mode", "Replay") not in ("Replay", "Simulation"):
+                    raise ValueError
             if len({e["id"] for e in data["replays"]}) != len(data["replays"]):
                 raise ValueError
             return data["replays"]
@@ -580,7 +582,11 @@ class ReplayLibrary:
             raise ReplayError("Invalid local replay ID.")
         return self.root / f"{identifier}.replay"
 
-    def import_file(self, value: str | Path) -> tuple[dict, Replay]:
+    def import_file(
+        self, value: str | Path, *, mode: str = "Replay", bot_names: tuple[str, str] | None = None
+    ) -> tuple[dict, Replay]:
+        if mode not in ("Replay", "Simulation"):
+            raise ReplayError("Invalid local replay mode.")
         source = path_value(value)
         raw = read_bytes(source)
         replay = decode_replay(raw)
@@ -592,7 +598,18 @@ class ReplayLibrary:
             if existing:
                 # Reimport restores a lost library copy without creating a duplicate row.
                 atomic_write(self.path(digest), raw)
-                return existing, replay
+                if mode == "Simulation" or bot_names:
+                    if mode == "Simulation":
+                        existing["mode"] = mode
+                    if bot_names:
+                        existing["bot_a"], existing["bot_b"] = (
+                            clean_label(name) for name in bot_names
+                        )
+                    atomic_write(
+                        self.index,
+                        (json.dumps({"version": 1, "replays": entries}, indent=2) + "\n").encode(),
+                    )
+                return existing, replace(replay, bots=(existing["bot_a"], existing["bot_b"]))
             if len(entries) >= 1000:
                 raise ReplayError("Library is full. Remove an old replay before importing another.")
             summary = replay.summary()
@@ -600,10 +617,11 @@ class ReplayLibrary:
                 "id": digest,
                 "name": clean_label(source.name),
                 "map": summary["map"],
-                "bot_a": replay.bots[0],
-                "bot_b": replay.bots[1],
+                "bot_a": clean_label((bot_names or replay.bots)[0]),
+                "bot_b": clean_label((bot_names or replay.bots)[1]),
                 "rounds": summary["rounds"],
                 "winner": replay.winner or "Draw / unfinished",
+                "mode": mode,
                 "imported_at": datetime.now(UTC).isoformat(),
             }
             atomic_write(self.path(digest), raw)
@@ -617,7 +635,7 @@ class ReplayLibrary:
             except OSError:
                 self.path(digest).unlink(missing_ok=True)
                 raise
-        return entry, replay
+        return entry, replace(replay, bots=(entry["bot_a"], entry["bot_b"]))
 
     def remove(self, identifier: str) -> None:
         path = self.path(identifier)

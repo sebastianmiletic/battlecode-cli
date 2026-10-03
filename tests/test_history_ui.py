@@ -77,25 +77,23 @@ def test_win_rates_require_a_real_denominator_and_leaderboard_adapts_nested_team
 
 
 @pytest.mark.parametrize("size", [(80, 24), (130, 40)])
-async def test_six_pages_large_metrics_charts_merged_tabs_and_projects_link(size, monkeypatch):
+async def test_website_pages_large_metrics_charts_merged_tabs_and_projects_link(size, monkeypatch):
     opened = []
     monkeypatch.setattr("battlecode_cli.app.webbrowser.open", opened.append)
     app = BattlecodeApp(demo=True)
     async with app.run_test(size=size) as pilot:
         await pilot.pause(0.2)
-        assert [page for page, _ in PAGES] == [
-            "overview",
-            "bots",
-            "games",
-            "arena",
-            "leaderboard",
-            "settings",
-        ]
+        pages = [page for page, _ in PAGES]
+        assert len(pages) == 17
+        assert pages[pages.index("bots") + 1] == "arena"
+        assert "documentation" in pages and "map-editor" in pages
         assert app.query_one("#elo-value", Digits).value == "1834"
         assert app.query_one("#rank-value", Digits).value == "17"
         for ident in ("elo-history", "rank-history"):
             chart = app.query_one(f"#{ident}", HistoryChart)
             assert len(chart.points) == 30
+            chart.scroll_visible(animate=False)
+            await pilot.pause(0.1)
             assert chart.region.bottom <= app.query_one("#pages").region.bottom
         assert "CONTROL ROOM" not in app.export_screenshot()
         assert await pilot.click("#projects-link")
@@ -105,7 +103,7 @@ async def test_six_pages_large_metrics_charts_merged_tabs_and_projects_link(size
         await pilot.click(app.query_one("#bot-tabs", TabbedContent).get_tab("bot-upload"))
         await pilot.pause(0.1)
         assert app.query_one("#upload-path", Input).visible
-        app.action_view("games")
+        app.action_view("my-games")
         await pilot.pause(0.1)
         app.query_one("#games-filter", Select).value = "ranked"
         await pilot.pause(0.1)

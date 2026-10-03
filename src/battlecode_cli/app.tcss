@@ -1,116 +1,209 @@
-Screen { background: #0c0c0c; color: #e8e8e8; }
+Screen { background: $background; color: $foreground; }
 .hidden { display: none; }
-#masthead { height: 3; padding: 0 2; background: #121212; border-bottom: solid #333333; }
-#wordmark { width: 1fr; text-style: bold; margin-top: 1; }
 #workspace { height: 1fr; }
-#sidebar { width: 21; padding: 1; background: #121212; border-right: solid #333333; }
+#sidebar { width: 28; padding: 1; background: $surface; border-right: solid #262b33; }
+#sidebar-brand { height: 3; margin-bottom: 1; }
+#brand-mark { width: 6; height: 3; color: $foreground; text-style: bold; }
+#wordmark { width: 1fr; height: 2; text-style: bold; }
+#sidebar-collapse { width: 2; min-width: 0; height: 1; padding: 0; margin: 0; background: transparent; color: $text-muted; }
+#sidebar-quota { height: 2; margin-bottom: 1; color: $text-muted; }
+#sidebar-queue { height: 1; width: 100%; min-width: 0; padding: 0; margin: 0; background: transparent; color: $text-muted; }
 #sidebar-label { display: none; }
-#nav { border: none; padding: 0; height: 1fr; background: transparent; }
+#nav { border: none; padding: 0; height: 1fr; min-height: 3; background: transparent; }
 #nav > .option-list--option { padding: 0 1; }
-#nav > .option-list--option-highlighted { color: #101010; background: #e8e8e8; text-style: bold; }
-#sidebar-note { color: #777777; height: 1; padding: 0 1; }
+#nav > .option-list--option-highlighted { color: $foreground; background: $panel; text-style: bold; }
+#nav > .option-list--option-disabled { color: $text-muted; text-style: dim; }
+#sidebar-sponsors { height: 1; width: 100%; min-width: 0; padding: 0; margin-top: 1; color: $text-muted; background: transparent; }
+#sidebar-links { height: 1; margin-top: 1; }
+#sidebar-discord, #sidebar-theme { height: 1; min-width: 0; padding: 0; margin: 0; background: transparent; color: $text-muted; }
+#sidebar-discord { width: 1fr; }
+#sidebar-theme { width: 3; }
+#sidebar-account { height: 1; min-width: 0; width: 100%; padding: 0; margin: 1 0 0 0; background: $panel; }
+#sidebar-note { color: $text-muted; height: 1; margin-top: 0; }
+#main-surface { width: 1fr; }
+#masthead { height: 5; padding: 1 2 0 2; border-bottom: solid #262b33; background: $background; }
+#page-heading { width: 1fr; }
+#site-eyebrow { height: 1; color: $text-muted; }
+#site-title { height: 2; text-style: bold; }
+#header-actions { width: auto; min-width: 25; }
+#projects-link { width: auto; min-width: 0; height: 1; padding: 0; margin: 0 0 1 0; background: transparent; color: $text-muted; }
+#projects-link:hover { color: $foreground; text-style: underline; }
+#site-challenge { height: 1; padding: 0 1; width: auto; margin: 0; }
 #pages { width: 1fr; height: 1fr; }
 .page { padding: 1 2; }
-.page-title { text-style: bold; height: 1; }
+.page-title, .profile-name { text-style: bold; height: 2; }
 .section-title { text-style: bold; height: 2; padding-top: 1; }
-.hint { color: #909090; height: auto; margin-bottom: 1; }
-#team-summary { height: 1; text-style: bold; }
-#rating-row { height: 5; margin-top: 1; }
-#elo-metric { width: 2fr; }
-#rank-metric { width: 1fr; }
-.metric-label { height: 1; color: #a0a0a0; text-style: bold; }
-Digits { height: 3; text-style: bold; }
-#team-record { width: 2fr; height: 3; color: #a0a0a0; padding-top: 1; }
-#history-row { height: 7; }
+.panel-heading { height: 1; text-style: bold; color: $foreground; }
+.hint { color: $text-muted; height: auto; max-height: 3; margin-bottom: 1; }
+.site-empty { height: auto; color: $text-muted; padding: 1; }
+.site-explainer { height: auto; max-width: 86; color: $text-muted; padding: 1 0; }
+#rating-row { height: 6; border-bottom: solid #262b33; margin-bottom: 1; }
+#elo-metric, #rank-metric, #record-metric, #submission-metric { width: 1fr; padding: 0 1; border-right: solid #262b33; }
+#elo-metric { padding-left: 0; }
+#submission-metric { border-right: none; }
+.metric-label { height: 1; color: $text-muted; text-style: bold; }
+Digits { height: 3; text-style: bold; color: $foreground; }
+#team-record { height: 3; color: $text-muted; }
+#active-summary { height: 3; color: $foreground; }
+#overview-submissions { height: 1; min-width: 0; padding: 0; margin: 0; color: $text-muted; background: transparent; }
+#overview-panels { grid-size: 2; grid-gutter: 1 2; height: 10; margin-bottom: 1; }
+.site-panel { background: $surface; border: round #262b33; padding: 0 1; }
+#recent-panel, #nearby-panel { height: 10; }
+#overview-battles, #overview-leaderboard { height: 1; min-width: 0; padding: 0; margin: 0; background: transparent; color: $text-muted; }
+#history-row { height: 9; }
+#elo-history, #rank-history { height: 9; background: $surface; border: round #262b33; padding: 0 1; }
 #elo-history { margin-right: 2; }
-#active-summary { height: 2; color: #cccccc; }
-#recent-panel { height: 1fr; }
 TabbedContent, .tab-workspace { height: 1fr; }
 TabPane { padding: 0; height: 1fr; }
 ContentTabs { margin-bottom: 1; }
-DataTable { height: 1fr; background: #0c0c0c; scrollbar-size: 1 1; }
-DataTable > .datatable--header { background: #202020; color: #b0b0b0; text-style: bold; }
-DataTable > .datatable--cursor { background: #e8e8e8; color: #101010; text-style: bold; }
-DataTable > .datatable--hover { background: #2b2b2b; color: #eeeeee; }
-DataTable:focus > .datatable--cursor { background: #e8e8e8; color: #101010; }
-#bots-table, #games-table { min-height: 4; }
-#overview-games { min-height: 4; }
-.detail-area { height: auto; border-top: solid #333333; padding-top: 1; margin-top: 1; }
+DataTable { height: 1fr; background: $background; scrollbar-size: 1 1; }
+.site-panel DataTable { background: $surface; }
+DataTable > .datatable--header { background: $panel; color: $text-muted; text-style: bold; }
+DataTable > .datatable--cursor { background: $panel; color: $foreground; text-style: bold; }
+DataTable > .datatable--hover { background: $surface; color: $foreground; }
+DataTable:focus > .datatable--cursor { background: $primary 20%; color: $foreground; }
+#bots-table, #games-table, #overview-games, #overview-ladder { min-height: 4; }
+.detail-area { height: auto; border-top: solid #262b33; padding-top: 1; margin-top: 1; }
 #bot-detail { height: 3; }
 #game-detail { height: 1; }
 #game-parts { height: 6; }
-#games-filter { width: 29; margin-bottom: 1; }
+#games-filter, #my-battles-filter { width: 29; margin-bottom: 1; }
 .actions { height: 3; margin-top: 1; }
-Button { background: #202020; color: #e8e8e8; border: none; min-width: 10; height: 3; padding: 0 2; margin-right: 1; text-style: none; }
-Button:hover { background: #363636; }
-Button:focus { background: #e8e8e8; color: #101010; text-style: bold; }
-Button.primary { background: #e8e8e8; color: #101010; text-style: bold; }
-Button.primary:hover { background: #cccccc; }
-Button.primary:disabled { background: #252525; color: #666666; }
-Button:disabled { color: #666666; background: #161616; }
-#projects-link { width: auto; min-width: 0; height: 1; padding: 0; margin: 1 0 0 0; background: transparent; color: #a0a0a0; }
-#projects-link:hover { color: #e8e8e8; text-style: underline; }
-#projects-link:focus { color: #101010; background: #e8e8e8; }
-Input { height: 3; max-width: 86; background: #161616; color: #e8e8e8; border: solid #454545; padding: 0 1; }
-Input:focus { border: solid #d0d0d0; }
-Input > .input--placeholder { color: #777777; }
-Select { height: 3; max-width: 86; border: none; padding: 0; background: #161616; }
-Select:focus > SelectCurrent { border: solid #d0d0d0; }
-SelectOverlay { background: #202020; border: solid #777777; }
-SelectCurrent { height: 3; padding: 0 1; border: solid #454545; background: #161616; color: #e8e8e8; }
-SelectOverlay > .option-list--option-highlighted { color: #101010; background: #e8e8e8; }
-SelectionList { height: 7; max-width: 86; background: #161616; border: solid #454545; padding: 0 1; }
-SelectionList:focus { border: solid #cccccc; }
-SelectionList > .option-list--option-highlighted { background: #303030; }
-SelectionList > .selection-list--button { color: #e8e8e8; background: #161616; }
+Button { background: $panel; color: $foreground; border: none; min-width: 10; height: 3; padding: 0 2; margin-right: 1; text-style: none; }
+Button:hover { background: $boost 20%; }
+Button:focus { background: $primary 25%; color: $foreground; text-style: bold; }
+Button.primary { background: $foreground; color: $background; text-style: bold; }
+Button.primary:hover { background: $foreground 80%; }
+Button.primary:disabled { background: $surface; color: $text-disabled; }
+Button:disabled { color: $text-disabled; background: $surface; }
+Input { height: 3; max-width: 86; background: $surface; color: $foreground; border: solid #262b33; padding: 0 1; }
+Input:focus { border: solid $primary; }
+Input > .input--placeholder { color: $text-muted; }
+Select { height: 3; max-width: 86; border: none; padding: 0; background: $surface; }
+Select:focus > SelectCurrent { border: solid $primary; }
+SelectOverlay { background: $panel; border: solid #8b93a0; }
+SelectCurrent { height: 3; padding: 0 1; border: solid #262b33; background: $surface; color: $foreground; }
+SelectOverlay > .option-list--option-highlighted { color: $foreground; background: $primary 25%; }
+SelectionList { height: 7; max-width: 86; background: $surface; border: solid #262b33; padding: 0 1; }
+SelectionList:focus { border: solid $primary; }
+SelectionList > .option-list--option-highlighted { background: $panel; }
+SelectionList > .selection-list--button { color: $foreground; background: $surface; }
 .field-label { height: 2; padding-top: 1; text-style: bold; }
-.form-note { height: auto; max-width: 86; color: #aaaaaa; margin-top: 1; }
-.form-status { height: auto; max-width: 86; color: #e8e8e8; margin-top: 1; }
-#path-row, .path-row { height: 3; max-width: 86; }
+.form-note { height: auto; max-width: 86; color: $text-muted; margin-top: 1; }
+.form-status { height: auto; max-width: 86; color: $foreground; margin-top: 1; }
+#path-row, .path-row { height: 3; max-width: 100%; }
 .path-row Input, #upload-path { width: 1fr; }
 .path-row Button, #browse-bot { margin-left: 1; margin-right: 0; }
 #ladder-search { margin-bottom: 1; }
-.empty { height: auto; color: #b0b0b0; padding: 1 0; display: none; }
+.empty { height: auto; color: $text-muted; padding: 1 0; display: none; }
 #arena-setup { height: 1fr; }
-#arena-progress { height: 2; color: #b0b0b0; }
-#arena-summary { height: 3; color: #d0d0d0; }
+#arena-progress { height: 2; color: $text-muted; }
+#arena-summary { height: 3; color: $foreground; }
 #arena-runs-table { height: 6; }
 #arena-results-table { min-height: 4; }
 #arena-local-maps { height: 6; }
 #arena-local .actions { margin-top: 0; }
 Collapsible { padding: 0; border: none; margin: 1 0; background: transparent; }
 Collapsible > Contents { padding: 0; }
-Checkbox { background: #161616; border: none; padding: 1; margin-top: 1; }
-#status-line { height: 1; background: #202020; color: #b8b8b8; padding: 0 2; }
-Footer { background: #121212; color: #aaaaaa; }
-Footer > .footer--key { color: #eeeeee; background: #303030; }
-Footer > .footer--description { color: #aaaaaa; }
-.compact #sidebar { width: 18; }
-.compact Button { padding: 0 1; min-width: 8; }
+Checkbox { background: $surface; border: none; padding: 1; margin-top: 1; }
+#status-line { height: 1; background: $surface; color: $text-muted; padding: 0 2; }
+Footer { background: $surface; color: $text-muted; }
+Footer > .footer--key { color: $foreground; background: $panel; }
+Footer > .footer--description { color: $text-muted; }
+.site-filter-row { height: 3; margin-bottom: 1; }
+.site-filter-row Input { width: 1fr; margin-right: 1; }
+.site-filter-row Select { width: 24; }
+.site-charts { grid-size: 2; grid-gutter: 1 2; height: 10; margin-bottom: 1; }
+.site-charts HistoryChart { height: 10; border: round #262b33; background: $surface; padding: 0 1; }
+#ratings-table { min-height: 4; }
+#tournaments-table { height: 7; min-height: 4; }
+#tournament-bracket { height: 1fr; min-height: 4; background: $surface; border: round #262b33; }
+.document-scroll { height: 1fr; background: $background; padding: 0 1; }
+Markdown { background: $background; }
+#docs-search { margin-bottom: 1; }
+#docs-workspace { height: 1fr; }
+#docs-topics { width: 26; height: 1fr; border: none; background: $surface; margin-right: 2; }
+#docs-state { height: 1; margin: 1 0 0 0; }
+#profile-facts { height: 7; margin: 1 0; border-bottom: solid #262b33; }
+.profile-fact { width: 1fr; padding: 0 1; border-right: solid #262b33; }
+.profile-fact:last-child { border-right: none; }
+#profile-record, #profile-versus { height: 3; padding-top: 1; }
+#profile-panels { grid-size: 2; grid-gutter: 1 2; height: 12; margin-bottom: 1; }
+#team-detail-tabs { height: 10; }
+#profile-requests { height: 5; }
+#editor-width, #editor-height { width: 7; }
+#editor-name { width: 1fr; }
+#editor-min-gap, #editor-max-gap, #editor-portal-id { width: 7; }
+#editor-tool { width: 22; margin-right: 1; }
+#editor-direction { width: 14; margin-right: 1; }
+#editor-symmetry { width: 20; }
+#editor-new { min-width: 5; width: 7; padding: 0 1; margin: 0; }
+#editor-tabs { height: 1fr; }
+#editor-viewport { height: 1fr; border: solid #262b33; overflow: auto auto; scrollbar-size: 1 1; }
+#editor-board { padding: 0; background: $background; }
+#editor-source { height: 1fr; background: $surface; }
+#editor-status { height: 2; margin-bottom: 0; }
+#map-editor .hint { height: 1; margin-bottom: 0; }
+.sidebar-collapsed #sidebar, .sidebar-collapsed.compact #sidebar { width: 3; padding: 0; }
+.sidebar-collapsed #sidebar-brand { height: 1; }
+.sidebar-collapsed #brand-mark, .sidebar-collapsed #wordmark, .sidebar-collapsed #sidebar-quota, .sidebar-collapsed #sidebar-queue, .sidebar-collapsed #nav, .sidebar-collapsed #sidebar-sponsors, .sidebar-collapsed #sidebar-links, .sidebar-collapsed #sidebar-account, .sidebar-collapsed #sidebar-note { display: none; }
+.compact #sidebar { width: 22; }
+.compact #brand-mark { width: 5; }
+.compact #sidebar-sponsors { display: none; }
 .compact #sidebar-note { display: none; }
-.short .page { padding: 0 2; }
-.short #rating-row { height: 4; margin-top: 0; }
-.short #history-row { height: 6; }
-.short HistoryChart { height: 6; }
-.short #recent-panel .section-title { height: 1; padding-top: 0; }
+.compact Button { padding: 0 1; min-width: 8; }
+.compact #overview-panels, .compact #profile-panels { grid-size: 1; height: 22; }
+.compact #elo-metric, .compact #rank-metric { width: 1fr; }
+.compact #record-metric { width: 1fr; }
+.compact #submission-metric { display: none; }
+.compact #profile-facts { layout: grid; grid-size: 2; grid-gutter: 1; height: 14; }
+.compact .profile-fact { height: 6; width: 100%; }
+.compact #docs-topics { width: 20; margin-right: 1; }
+.compact #nav > .option-list--option { padding: 0; }
+.compact #ratings-team { width: 23; }
+.compact #editor-tool { width: 16; }
+.compact #editor-direction { width: 12; }
+.compact #editor-width, .compact #editor-height, .compact #editor-min-gap, .compact #editor-max-gap, .compact #editor-portal-id { width: 5; }
+.compact #editor-symmetry { width: 15; }
+.compact #editor-new { width: 7; min-width: 7; }
+.compact #header-actions { min-width: 24; }
+.short .page { padding: 0 1; }
+.short #masthead { height: 3; padding-top: 0; }
+.short #site-title { height: 1; }
+.short #projects-link { margin-bottom: 0; }
+.short #rating-row { height: 5; }
 .short ContentTabs { margin-bottom: 0; }
 .short .detail-area { margin-top: 0; padding-top: 0; }
 .short #game-parts { height: 4; }
 .short #games-filter { margin-bottom: 0; }
 .short #game-matches .actions { margin-top: 0; }
 .short #leaderboard-state { height: 1; margin-bottom: 0; }
-ModalScreen { background: #0c0c0c 85%; align: center middle; }
-.dialog { background: #161616; border: solid #777777; padding: 1 2; }
+.short #map-editor .site-filter-row { height: 1; margin-bottom: 1; }
+.short #map-editor Input, .short #map-editor Select, .short #map-editor SelectCurrent, .short #map-editor Button { height: 1; border: none; padding: 0 1; }
+.short #map-editor .path-row { height: 1; }
+.short #map-editor .actions { height: 2; }
+.short #map-editor #editor-status { display: block; height: 1; max-height: 1; }
+.short #map-editor .hint { display: none; }
+.short #docs-topics { width: 17; }
+.short #ratings .site-charts { height: 6; margin-bottom: 0; }
+.short #ratings HistoryChart { height: 6; }
+.short #ratings #ratings-summary { height: 1; max-height: 1; margin-bottom: 0; }
+.short #ratings .site-filter-row { margin-bottom: 0; }
+.short #ratings-table { min-height: 3; }
+.short #tournaments-table { height: 5; }
+.short #tournaments-state { height: 1; max-height: 1; margin-bottom: 0; }
+ModalScreen { background: $background 85%; align: center middle; }
+.dialog { background: $surface; border: solid #8b93a0; padding: 1 2; }
 .confirm-dialog { width: 72; height: auto; max-height: 90%; }
 .dialog-title { text-style: bold; height: 2; }
 .dialog-copy { height: auto; margin-bottom: 1; }
 .confirm-copy { height: auto; max-height: 40vh; }
 .text-dialog { width: 90%; height: 85%; }
-#text-log { height: 1fr; background: #161616; }
+#text-log { height: 1fr; background: $surface; }
 .file-dialog { width: 85%; height: 85%; }
-#file-tree { height: 1fr; background: #161616; margin-top: 1; }
-Toast { background: #242424; color: #eeeeee; border: solid #777777; }
-LoadingIndicator { color: #cccccc; }
+#file-tree { height: 1fr; background: $surface; margin-top: 1; }
+Toast { background: $panel; color: $foreground; border: solid #8b93a0; }
+LoadingIndicator { color: $secondary; }
 #accounts-table { height: 7; margin-top: 1; }
 #accounts-empty { margin-top: 0; }
 #replays-table { min-height: 4; }
@@ -118,18 +211,16 @@ LoadingIndicator { color: #cccccc; }
 #replay-path { width: 1fr; }
 #browse-replay { margin-left: 1; margin-right: 0; }
 .replay-screen { padding: 0; }
-#replay-heading, #replay-stats, #replay-legend, #replay-viewport,
-#replay-inspector, #replay-timeline, #replay-position, #replay-buttons,
-#replay-options { margin: 0 1; }
+#replay-heading, #replay-stats, #replay-legend, #replay-viewport, #replay-inspector, #replay-timeline, #replay-position, #replay-buttons, #replay-options { margin: 0 1; }
 #replay-heading { height: 1; text-style: bold; }
-#replay-stats { height: 2; color: #d0d0d0; }
-#replay-legend { height: 1; color: #909090; }
-#replay-viewport { height: 1fr; border: solid #333333; overflow: auto auto; scrollbar-size: 1 1; }
-#replay-board { background: #0c0c0c; padding: 0; }
-#replay-inspector { height: 1; color: #b0b0b0; }
-#replay-timeline { height: 1; background: #161616; }
-#replay-timeline:focus { background: #242424; }
-#replay-position { height: 1; color: #b0b0b0; }
+#replay-stats { height: 2; color: $foreground; }
+#replay-legend { height: 1; color: $text-muted; }
+#replay-viewport { height: 1fr; border: solid #262b33; overflow: auto auto; scrollbar-size: 1 1; }
+#replay-board { background: $background; padding: 0; }
+#replay-inspector { height: 1; color: $text-muted; }
+#replay-timeline { height: 1; background: $surface; }
+#replay-timeline:focus { background: $panel; }
+#replay-position { height: 1; color: $text-muted; }
 #replay-buttons { height: 3; margin-top: 0; }
 #replay-options { height: 3; }
 .replay-screen Button { min-width: 7; padding: 0 1; }

@@ -47,6 +47,11 @@ from .replays import path_value
 class ArenaActions(MessagePump):
     def init_arena(self) -> None:
         self.arena_maps = MapLibrary()
+        self.arena_boot_error = ""
+        try:
+            self.arena_maps.ensure_official()
+        except (ValueError, OSError) as error:
+            self.arena_boot_error = redact(str(error))
         self.arena_store = ArenaStore()
         self.arena_runner = None
         self.arena_busy = False
@@ -59,9 +64,12 @@ class ArenaActions(MessagePump):
     def update_arena_runner(self) -> None:
         available = bool(runner_path())
         self.query_one("#arena-runner-state", Static).update(
-            "Official judge sandbox · local only"
-            if available
-            else "Install the official runner to benchmark locally."
+            self.arena_boot_error
+            or (
+                "Official judge sandbox · local only"
+                if available
+                else "Install the official runner to simulate locally."
+            )
         )
         self.query_one("#arena-install", Button).display = not available
         self.query_one("#arena-run", Button).disabled = self.arena_busy
@@ -189,9 +197,9 @@ class ArenaActions(MessagePump):
             plan.validate()
             if not await self.push_screen_wait(
                 Confirm(
-                    "Run local benchmark?",
+                    "Run local simulation?",
                     f"{bots[0].label} vs {bots[1].label}\n{len(bots) - 2} shared opponents · {len(plan.maps)} maps · {plan.repeats} repeat(s)\n{plan.count:,} games · {'both seats' if plan.swap else 'one seat'} · base seed {plan.seed}\n\nBots are copied into a private workspace and run in the official judge sandbox. This can use substantial CPU and disk. No uploads, activations, challenges or ELO changes. Stop preserves completed results.",
-                    "Run benchmark",
+                    "Run simulation",
                 )
             ):
                 return
@@ -202,6 +210,7 @@ class ArenaActions(MessagePump):
             self.update_arena_runner()
             self.query_one("#arena-tabs", TabbedContent).active = "arena-results"
             await self.arena_runner.run(plan, self.arena_progress)
+            self.render_library()
         except Exception as error:
             self.fail(error, "#arena-progress")
         finally:
@@ -250,7 +259,7 @@ class ArenaActions(MessagePump):
     @on(DataTable.RowSelected, "#arena-runs-table")
     def arena_run_selected(self, event: DataTable.RowSelected) -> None:
         if self.arena_busy:
-            self.notify("Stop the current benchmark before opening an older batch.")
+            self.notify("Stop the current simulation before opening an older batch.")
             return
         self.load_arena_run(str(event.row_key.value))
 
@@ -270,7 +279,7 @@ class ArenaActions(MessagePump):
         stats = aggregates(job)
         errors = sum(bool(game.get("error")) for game in job["games"])
         self.query_one("#arena-summary", Static).update(
-            f"{job['status'].upper()} · {len(job['games'])}/{job['total']} games · {errors} errors\n"
+            f"SIMULATION · {job['status'].upper()} · {len(job['games'])}/{job['total']} games · {errors} errors\n"
             + "   |   ".join(
                 f"{row['label']}: {record_label(row)} ({winrate(row)})" for row in stats[:2]
             )

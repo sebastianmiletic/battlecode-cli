@@ -11,7 +11,18 @@ TEAM = {
     "team": {"id": 900, "name": "Night shift", "elo": 1834, "wins": 128, "draws": 4, "losses": 72},
     "rank": 17,
     "peak": 1902,
+    "bestRank": 12,
+    "pendingJoinRequests": [],
 }
+TEAM["team"].update(
+    bio="Synthetic preview team, not a live account.",
+    institution="Example University",
+    eligible=True,
+    members=[
+        {"id": 9001, "username": "harper", "role": "Leader", "institution": "Example University"},
+        {"id": 9002, "username": "rowan", "role": "Member", "institution": "Example University"},
+    ],
+)
 TEAM["team"]["history"] = [
     {"date": f"2026-10-{1 + i // 24:02}T{i % 24:02}:00:00Z", "elo": value, "rank": rank}
     for i, (value, rank) in enumerate(
@@ -226,6 +237,70 @@ class DemoAPI:
             }
         if path == "/leaderboard":
             return deepcopy(LADDER)
+        if path == "/ratings":
+            return deepcopy([*LADDER, {**TEAM["team"], "rank": TEAM["rank"], "peak": TEAM["peak"]}])
+        if path == "/teams":
+            return deepcopy([*LADDER, {**TEAM["team"], "rank": TEAM["rank"]}])
+        if path.startswith("/teams/"):
+            ident = int(path.rsplit("/", 1)[1])
+            if ident == 900:
+                return deepcopy(TEAM)
+            team = next((team for team in LADDER if team["id"] == ident), None)
+            if team:
+                return {
+                    "team": deepcopy(team),
+                    "against": {"wins": 4, "draws": 1, "losses": 2},
+                    "recentBattles": deepcopy(BATTLES[:3]),
+                }
+            raise APIError("This synthetic team is not in the preview.", 404)
+        if path == "/tournaments":
+            return [
+                {
+                    "id": 701,
+                    "name": "Synthetic example cup",
+                    "status": "completed",
+                    "startsAt": "2026-10-01T00:00:00Z",
+                    "teamCount": 4,
+                }
+            ]
+        if path == "/tournaments/701":
+            return {
+                "name": "Synthetic example cup",
+                "status": "completed",
+                "rounds": [
+                    {
+                        "name": "Semifinals",
+                        "matches": [
+                            {
+                                "name": "Northstar vs Atlas",
+                                "battleId": 721,
+                                "scoreA": 3,
+                                "scoreB": 2,
+                                "winner": "Northstar",
+                            },
+                            {
+                                "name": "Paper crane vs Compass",
+                                "battleId": 722,
+                                "scoreA": 4,
+                                "scoreB": 1,
+                                "winner": "Paper crane",
+                            },
+                        ],
+                    },
+                    {
+                        "name": "Final",
+                        "matches": [
+                            {
+                                "name": "Northstar vs Paper crane",
+                                "battleId": 725,
+                                "scoreA": 3,
+                                "scoreB": 2,
+                                "winner": "Northstar",
+                            }
+                        ],
+                    },
+                ],
+            }
         if path == "/maps":
             return deepcopy(MAPS)
         if path == "/queue":

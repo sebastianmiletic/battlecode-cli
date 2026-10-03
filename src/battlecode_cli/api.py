@@ -55,7 +55,7 @@ class BattlecodeAPI:
             message = f"Server returned HTTP {response.status_code}."
         if response.status_code == 401:
             message = (
-                "API key rejected. Make a new key on your team page, then connect in Settings."
+                "API key rejected. Make a new key on your team page, then connect in API keys (6)."
             )
         retry = response.headers.get("Retry-After", "0")
         seconds = int(retry) if retry.isdigit() else 60

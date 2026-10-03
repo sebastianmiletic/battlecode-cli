@@ -31,9 +31,10 @@ class Timeline(Static):
     def render(self) -> Text:
         width = max(1, self.size.width)
         mark = round(self.index / max(1, self.maximum) * (width - 1))
-        result = Text("━" * mark, style="#e8e8e8")
-        result.append("●", style="bold #e8e8e8")
-        result.append("─" * (width - mark - 1), style="#555555")
+        foreground = "#0f1c2e" if self.app.theme == "battlecode-site-light" else "#eceef1"
+        result = Text("━" * mark, style=foreground)
+        result.append("●", style="bold " + foreground)
+        result.append("─" * (width - mark - 1), style="#8b93a0")
         return result
 
     def seek_at(self, event: events.MouseEvent) -> None:
@@ -74,8 +75,8 @@ class ReplayBoard(Static):
             super().__init__()
             self.point = point
 
-    def __init__(self, replay: Replay):
-        super().__init__(id="replay-board", markup=False)
+    def __init__(self, replay: Replay, *, ident: str = "replay-board"):
+        super().__init__(id=ident, markup=False)
         self.replay = replay
         self.frame = replay.frames[0]
         self.detailed = True
@@ -118,22 +119,26 @@ class ReplayBoard(Static):
             grid[py][px] = (
                 "QR"[dragon.team] if dragon.id == terrain.queens[dragon.team] else "AB"[dragon.team]
             )
+        light = self.app.theme == "battlecode-site-light"
+        a = "#0f1c2e" if light else "#eceef1"
+        b = "#41786d" if light else "#a5b4fc"
+        terrain_color = "#697582" if light else "#69727e"
         styles = {
-            "Q": "bold reverse #e8e8e8",
-            "R": "bold reverse #b0b0b0",
-            "A": "bold #e8e8e8",
-            "B": "bold #b0b0b0",
-            "a": "#d0d0d0",
-            "b": "#999999",
-            "*": "bold #e8e8e8",
-            "@": "bold #a0a0a0",
+            "Q": "bold reverse " + a,
+            "R": "bold reverse " + b,
+            "A": "bold " + a,
+            "B": "bold " + b,
+            "a": a,
+            "b": b,
+            "*": "bold " + a,
+            "@": "bold " + b,
         }
         output = Text()
         # Coalesce equal-style runs instead of allocating a Rich span for every empty tile.
         for line_index, line in enumerate(grid):
             current_style, run = None, []
             for char in line:
-                style = styles.get(char, "#666666")
+                style = styles.get(char, terrain_color)
                 if current_style is not None and style != current_style:
                     output.append("".join(run), style=current_style)
                     run = []

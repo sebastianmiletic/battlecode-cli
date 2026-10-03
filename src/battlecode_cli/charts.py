@@ -56,10 +56,13 @@ class HistoryChart(Widget):
         self.refresh()
 
     def render(self) -> Text:
+        light = self.app.theme == "battlecode-site-light"
+        muted = "#546171" if light else "#88909c"
+        plot = "#41786d" if light else "#9ed8cb"
         heading = self.title + (" (inferred)" if self.inferred else "")
         text = Text(heading + "\n", style="bold")
         if len(self.points) < 2:
-            text.append("History appears after two observations.", style="#909090")
+            text.append("History appears after two observations.", style=muted)
             return text
         width = max(4, self.content_size.width - 7)
         rows = max(1, min(4, self.content_size.height - 3))
@@ -100,8 +103,10 @@ class HistoryChart(Widget):
                 if row == rows - 1
                 else None
             )
-            text.append(f"{label:5g} " if label is not None else "      ", style="#909090")
-            text.append("".join(chr(0x2800 + cell) if cell else " " for cell in cells) + "\n")
+            text.append(f"{label:5g} " if label is not None else "      ", style=muted)
+            text.append(
+                "".join(chr(0x2800 + cell) if cell else " " for cell in cells) + "\n", style=plot
+            )
         first, last = self.points[0][0][5:10], self.points[-1][0][5:10]
-        text.append(f"      {first}{' ' * max(1, width - 10)}{last}", style="#909090")
+        text.append(f"      {first}{' ' * max(1, width - 10)}{last}", style=muted)
         return text

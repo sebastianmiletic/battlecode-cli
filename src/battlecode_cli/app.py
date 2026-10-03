@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 import webbrowser
+from dataclasses import replace
 from datetime import datetime
 from importlib.resources import files
 from pathlib import Path
@@ -49,6 +50,7 @@ from .config import (
 from .demo import DemoAPI
 from .dialogs import Confirm, FilePicker, TextViewer
 from .history import HistoryStore, histories, number, series
+from .map_editor import MapEditor
 from .models import (
     active_bot,
     battle_row,
@@ -62,19 +64,24 @@ from .models import (
 )
 from .replay_viewer import ReplayViewer
 from .replays import ReplayLibrary, decode_replay, load_replay
+from .site import NAVIGATION, PAGES
+from .site_ui import SiteActions
+from .site_views import (
+    Documentation,
+    FindTeams,
+    PublicMatches,
+    Ratings,
+    TeamProfile,
+    Tournaments,
+    Updates,
+    Visualiser,
+    YourBattles,
+)
 from .views import Arena, Bots, Games, Leaderboard, Overview, Settings
 
-PAGES = [
-    ("overview", "Overview"),
-    ("bots", "Bots"),
-    ("games", "Games"),
-    ("arena", "Arena"),
-    ("leaderboard", "Leaderboard"),
-    ("settings", "API keys"),
-]
 HELP = """BATTLECODE
 
-1 Overview     2 Bots        3 Games
+1 Overview     2 Submissions     3 Your games
 4 Arena        5 Leaderboard             6 API keys
 
 Tab / Shift+Tab  Move between controls
@@ -93,7 +100,11 @@ A new successful upload may become active automatically.
 Win rate: wins / (wins + draws + losses), from server records.
 Choose a battle, then a game, to download or open its replay.
 Games includes ranked/unranked matches and the local replay library.
-Bots includes versions and uploads. Arena includes benchmarks, online challenges and results.
+Submissions includes versions and uploads. Arena includes simulations, online challenges and results.
+The sidebar follows the full website: Updates, Ratings, Battles, Games, Tournaments,
+Documentation (23 topics), Visualiser, Map editor, Team, Your battles and Find a team.
+Ctrl+B collapses navigation; Ctrl+T changes theme; Ctrl+K opens documentation search.
+The local map editor has terrain brushes, source editing, undo/redo and confirmed saves.
 Local benchmarks use the official judge sandbox with fixed seeds and optional seat swaps.
 Import up to 1,000 custom maps from a folder or ZIP. They are never uploaded.
 Compare two local versions, optionally against up to 20 shared opponent bots.
@@ -109,22 +120,25 @@ First launch asks for a key; Continue offline opens your local replay library.
 Mouse: click navigation, table rows and buttons; use the wheel to scroll.
 
 Demo data is synthetic. Demo mode cannot change an account.
-Account settings, membership and tournaments use the website.
+Account settings, team settings, stars and membership changes use the official website.
+Tournaments and their brackets are readable in the terminal through the documented API.
 """
 
 
-class BattlecodeApp(ArenaActions, App):
+class BattlecodeApp(SiteActions, ArenaActions, App):
     TITLE = "Battlecode"
     SUB_TITLE = ""
     CSS_PATH = "app.tcss"
     BINDINGS = [
         Binding("1", "view('overview')", "Overview"),
-        Binding("2", "view('bots')", "Bots"),
-        Binding("3", "view('games')", "Games"),
-        *[
-            Binding(str(i), f"view('{page}')", label, show=False)
-            for i, (page, label) in enumerate(PAGES[3:], 4)
-        ],
+        Binding("2", "view('bots')", "Submissions"),
+        Binding("3", "view('my-games')", "Your games"),
+        Binding("4", "view('arena')", "Arena", show=False),
+        Binding("5", "view('leaderboard')", "Leaderboard", show=False),
+        Binding("6", "view('settings')", "API keys", show=False),
+        Binding("ctrl+b", "toggle_sidebar", "Navigation", show=False, priority=True),
+        Binding("ctrl+t", "toggle_site_theme", "Theme", show=False, priority=True),
+        Binding("ctrl+k", "doc_search", "Documentation", show=False, priority=True),
         Binding("r", "refresh", "Refresh"),
         Binding("question_mark", "help", "Help"),
         Binding("ctrl+q", "quit", "Quit", priority=True),
@@ -167,6 +181,7 @@ class BattlecodeApp(ArenaActions, App):
         self.maps: list[dict] = []
         self.history_store = HistoryStore()
         self.init_arena()
+        self.init_site()
         self.bot_id: int | None = None
         self.battle_id: int | None = None
         self.game_id: int | None = None
@@ -180,46 +195,94 @@ class BattlecodeApp(ArenaActions, App):
         self.last_ladder_fetch = 0.0
         self.register_theme(
             Theme(
-                name="battlecode-mono",
-                primary="#e8e8e8",
-                secondary="#a0a0a0",
-                accent="#d0d0d0",
-                foreground="#e8e8e8",
-                background="#0c0c0c",
-                surface="#161616",
-                panel="#202020",
-                boost="#aaaaaa",
-                success="#d0d0d0",
-                error="#e8e8e8",
-                warning="#b8b8b8",
+                name="battlecode-site",
+                primary="#5fded2",
+                secondary="#a5b4fc",
+                accent="#5fded2",
+                foreground="#eceef1",
+                background="#0b0d10",
+                surface="#15181d",
+                panel="#1c2026",
+                boost="#b4bac4",
+                success="#3ecf7a",
+                error="#f0605a",
+                warning="#d7bd91",
                 dark=True,
             )
         )
-        self.theme = "battlecode-mono"
+        self.register_theme(
+            Theme(
+                name="battlecode-site-light",
+                primary="#66518f",
+                secondary="#41786d",
+                accent="#66518f",
+                foreground="#0f1c2e",
+                background="#f4f6f9",
+                surface="#e9edf2",
+                panel="#fafbfc",
+                success="#357b42",
+                error="#ad4134",
+                warning="#7f6537",
+                dark=False,
+            )
+        )
+        self.theme = "battlecode-site"
 
     def compose(self) -> ComposeResult:
-        with Horizontal(id="masthead"):
-            yield Static("BATTLECODE", id="wordmark", markup=False)
-            yield Button("See more of my projects", id="projects-link")
         yield Static("", id="connection", classes="hidden", markup=False)
         with Horizontal(id="workspace"):
             with Vertical(id="sidebar"):
-                yield Static("", id="sidebar-label")
-                yield OptionList(
-                    *[
-                        Option(Text(f"{i} {label}"), id=page)
-                        for i, (page, label) in enumerate(PAGES, 1)
-                    ],
-                    id="nav",
-                )
-                yield Static("? Help", id="sidebar-note", markup=False)
-            with ContentSwitcher(initial="overview", id="pages"):
-                yield Overview(id="overview", classes="page")
-                yield Bots(id="bots", classes="page")
-                yield Games(id="games", classes="page")
-                yield Arena(id="arena", classes="page")
-                yield Leaderboard(id="leaderboard", classes="page")
-                yield Settings(id="settings", classes="page")
+                with Horizontal(id="sidebar-brand"):
+                    yield Static("╭○ ○╮\n│• •│\n╰━━━╯", id="brand-mark", markup=False)
+                    yield Static("UNSW\nBattlecode", id="wordmark", markup=False)
+                    yield Button("‹", id="sidebar-collapse")
+                yield Static("Autoscrims this hour\nn/a", id="sidebar-quota", markup=False)
+                yield Button("Judge queue", id="sidebar-queue")
+                options = []
+                for group, items in NAVIGATION:
+                    if group:
+                        options.append(
+                            Option(
+                                Text(group, style="dim"), disabled=True, id="group-" + group.lower()
+                            )
+                        )
+                    for page, label, icon in items:
+                        self.nav_indices[page] = len(options)
+                        options.append(Option(Text(f"{icon}  {label}"), id=page))
+                self.nav_indices["settings"] = len(options)
+                options.append(Option(Text("♙  API keys"), id="settings"))
+                yield OptionList(*options, id="nav")
+                yield Button("Presented by Jump / HRT", id="sidebar-sponsors")
+                with Horizontal(id="sidebar-links"):
+                    yield Button("Discord", id="sidebar-discord")
+                    yield Button("☼", id="sidebar-theme")
+                yield Button("Account / keys", id="sidebar-account")
+                yield Static("? Help · Ctrl+B navigation", id="sidebar-note", markup=False)
+            with Vertical(id="main-surface"):
+                with Horizontal(id="masthead"):
+                    with Vertical(id="page-heading"):
+                        yield Static("Your team", id="site-eyebrow", markup=False)
+                        yield Static("Overview", id="site-title", markup=False)
+                    with Vertical(id="header-actions"):
+                        yield Button("See more of my projects", id="projects-link")
+                        yield Button("Find an opponent", id="site-challenge", classes="primary")
+                with ContentSwitcher(initial="overview", id="pages"):
+                    yield Overview(id="overview", classes="page")
+                    yield Updates(id="updates", classes="page")
+                    yield Leaderboard(id="leaderboard", classes="page")
+                    yield Ratings(id="ratings", classes="page")
+                    yield PublicMatches("battles", id="battles", classes="page")
+                    yield Games(id="games", classes="page")
+                    yield Tournaments(id="tournaments", classes="page")
+                    yield Bots(id="bots", classes="page")
+                    yield Arena(id="arena", classes="page")
+                    yield Documentation(id="documentation", classes="page")
+                    yield Visualiser(id="visualiser", classes="page")
+                    yield MapEditor(id="map-editor", classes="page")
+                    yield TeamProfile(id="team", classes="page")
+                    yield YourBattles(id="my-battles", classes="page")
+                    yield FindTeams(id="teams", classes="page")
+                    yield Settings(id="settings", classes="page")
         yield Static(
             "Demo: synthetic data, no API calls." if self.api.demo else "Connecting…",
             id="status-line",
@@ -234,7 +297,17 @@ class BattlecodeApp(ArenaActions, App):
             "bots-table": ("VERSION", "BOT", "STATE", "W / D / L", "WIN RATE", "UPLOADED"),
             "games-table": ("BATTLE", "OPPONENT", "MODE", "RESULT", "GAMES", "Δ ELO", "WHEN"),
             "game-parts": ("GAME", "MAP", "STATUS", "RESULT", "REPLAY"),
-            "ladder-table": ("RANK", "TEAM", "ELO", "WIN RATE", "WINS", "MEMBERS", "TEAM ID"),
+            "ladder-table": (
+                "RANK",
+                "TEAM",
+                "ELO",
+                "WIN RATE",
+                "WINS",
+                "MEMBERS",
+                "TEAM ID",
+                "INSTITUTION",
+                "ELIGIBLE",
+            ),
             "arena-runs-table": ("WHEN", "STATUS", "GAMES", "BOT A", "BOT B"),
             "arena-results-table": (
                 "GAME",
@@ -247,18 +320,19 @@ class BattlecodeApp(ArenaActions, App):
                 "DEATHS A/B",
             ),
             "accounts-table": ("LABEL", "TEAM", "STATE", "KEY STORAGE"),
-            "replays-table": ("FILE", "MAP", "ROUNDS", "WINNER", "IMPORTED"),
+            "replays-table": ("FILE", "MAP", "MODE", "ROUNDS", "WINNER", "IMPORTED"),
         }
         widths = {
             "overview-games": (20, 8, 8, 7),
             "games-table": (6, 20, 8, 9, 12, 7, 12),
-            "ladder-table": (4, 24, 6, 8, 7, 30, 7),
+            "ladder-table": (4, 24, 6, 8, 7, 30, 7, 24, 8),
         }
         for ident, headings in columns.items():
             table = self.query_one(f"#{ident}", DataTable)
             for index, heading in enumerate(headings):
                 table.add_column(heading, width=widths[ident][index] if ident in widths else None)
             table.show_row_labels = False
+        self.site_setup()
         self.query_one("#nav", OptionList).highlighted = 0
         self.query_one("#overview-games", DataTable).focus()
         self.update_settings()
@@ -266,7 +340,7 @@ class BattlecodeApp(ArenaActions, App):
         self.set_class(self.size.height < 32, "short")
         self.set_interval(self.refresh_seconds, self.poll)
         self.render_library()
-        self.render_arena_maps()
+        self.render_arena_maps(select_all=True)
         self.render_arena_runs()
         self.update_arena_runner()
         if self.api.demo or self.api.credential:
@@ -290,6 +364,7 @@ class BattlecodeApp(ArenaActions, App):
         if self.arena_runner:
             self.arena_runner.cancel.set()
         await self.api.close()
+        await self.website.close()
 
     def status(self, message: str) -> None:
         token = self.api.credential.token if self.api.credential else ""
@@ -382,6 +457,9 @@ class BattlecodeApp(ArenaActions, App):
             "replays": "games",
             "challenge": "arena",
             "ladder": "leaderboard",
+            "submissions": "bots",
+            "docs": "documentation",
+            "my-games": "games",
         }.get(page, page)
         if page not in dict(PAGES) or len(self.screen_stack) > 1:
             return
@@ -390,14 +468,29 @@ class BattlecodeApp(ArenaActions, App):
             self.query_one("#bot-tabs", TabbedContent).active = (
                 "bot-upload" if requested == "upload" else "bot-versions"
             )
-        if requested in ("games", "replays"):
+        if requested in ("games", "my-games", "replays"):
             self.query_one("#game-tabs", TabbedContent).active = (
-                "game-local" if requested == "replays" else "game-matches"
+                "game-local"
+                if requested == "replays"
+                else "game-global"
+                if requested == "games"
+                else "game-matches"
             )
         if requested == "challenge":
             self.query_one("#arena-tabs", TabbedContent).active = "arena-online"
-        self.query_one("#nav", OptionList).highlighted = [p for p, _ in PAGES].index(page)
+        nav_page = "my-games" if requested in ("my-games", "replays") else page
+        self.query_one("#nav", OptionList).highlighted = self.nav_indices[nav_page]
         focus = {
+            "updates": "updates-refresh",
+            "ratings": "ratings-search",
+            "battles": "public-battles-search",
+            "tournaments": "tournaments-table",
+            "documentation": "docs-search",
+            "visualiser": "visualiser-path",
+            "map-editor": "editor-tool",
+            "team": "team",
+            "my-battles": "my-battles-table",
+            "teams": "teams-search",
             "overview": "overview-games",
             "bots": "bots-table",
             "games": "games-table",
@@ -406,6 +499,7 @@ class BattlecodeApp(ArenaActions, App):
             "settings": "accounts-table" if self.saved_profile_count else "api-key",
         }
         target = {
+            "games": "public-games-search",
             "upload": "upload-path",
             "challenge": "challenge-team",
             "replays": "replay-path",
@@ -424,6 +518,8 @@ class BattlecodeApp(ArenaActions, App):
                 not tabs_id or self.query_one(f"#{tabs_id}", TabbedContent).active == pane
             ):
                 self.query_one(f"#{target}").focus()
+                if page == "team":
+                    self.query_one("#team").scroll_home(animate=False)
 
         self.call_after_refresh(focus_current)
         if (self.api.demo or self.api.credential) and (
@@ -437,6 +533,7 @@ class BattlecodeApp(ArenaActions, App):
             self.update_arena_runner()
         if page == "settings":
             self.update_settings()
+        self.site_navigate(nav_page)
 
     @on(OptionList.OptionSelected, "#nav")
     def nav_selected(self, event: OptionList.OptionSelected) -> None:
@@ -490,7 +587,17 @@ class BattlecodeApp(ArenaActions, App):
             self.refresh_data()
 
     def action_refresh(self) -> None:
+        if self.site_page in ("updates", "battles", "games"):
+            self.load_public_page(self.site_page, force=True)
+            return
+        if self.site_page in ("ratings", "teams", "tournaments"):
+            self.load_site_api(self.site_page, force=True)
+            return
+        if self.site_page == "documentation":
+            self.refresh_doc()
+            return
         self.render_library()
+        self.refresh_simulated_matches()
         if self.syncing or self.auth_changing:
             return
         if time.monotonic() < self.cooldown_until:
@@ -611,6 +718,12 @@ class BattlecodeApp(ArenaActions, App):
         rank = number(self.team.get("rank", team.get("rank", standing.get("rank"))))
         self.query_one("#elo-value", Digits).update(f"{rating:g}" if rating is not None else "--")
         self.query_one("#rank-value", Digits).update(f"{rank:g}" if rank is not None else "--")
+        self.query_one("#elo-extra", Static).update(
+            f"Peak {self.team.get('peak', team.get('peakElo', 'n/a'))}"
+        )
+        self.query_one("#rank-extra", Static).update(
+            f"Best {self.team.get('bestRank', team.get('bestRank', 'n/a'))}"
+        )
         self.query_one("#team-record", Static).update(
             f"{record_label(team)}\n{winrate(team)} win rate"
         )
@@ -627,7 +740,7 @@ class BattlecodeApp(ArenaActions, App):
         self.query_one("#elo-history", HistoryChart).set_series(elo_points)
         self.query_one("#rank-history", HistoryChart).set_series(rank_points, inferred=inferred)
         self.query_one("#active-summary", Static).update(
-            f"ACTIVE  {active['name']}   ·   {winrate(active)} wins   ·   {record_label(active)}"
+            f"{active['name']}\n{record_label(active)}\n{winrate(active)} win rate"
             if active
             else "No active bot"
         )
@@ -680,13 +793,13 @@ class BattlecodeApp(ArenaActions, App):
             bot = next((s for s in self.submissions if s["id"] == self.bot_id), None)
             if bot:
                 self.display_bot(bot)
+        self.render_site_data()
 
     def filtered_battles(self) -> list[dict]:
         mode = self.query_one("#games-filter", Select).value
         normalized = [battle_row(b, team_data(self.team).get("id")) for b in self.battles]
-        return [
-            b for b in normalized if mode == "all" or (b["mode"] == "Ranked") == (mode == "ranked")
-        ]
+        normalized += self.simulated_matches
+        return [b for b in normalized if mode == "all" or b["mode"].lower() == mode]
 
     @on(Select.Changed, "#games-filter")
     def games_filter_changed(self) -> None:
@@ -701,7 +814,7 @@ class BattlecodeApp(ArenaActions, App):
                 (
                     str(b["id"]),
                     (
-                        b["id"],
+                        b.get("display_id", b["id"]),
                         b["opponent"],
                         b["mode"],
                         b["result"],
@@ -721,9 +834,16 @@ class BattlecodeApp(ArenaActions, App):
         selected = [
             (i, t)
             for i, t in enumerate(self.ladder, 1)
-            if search in str(t.get("name", "")).casefold()
-            or search in str(t.get("id", t.get("teamId", "")))
-            or search in members_label(t).casefold()
+            if (
+                search in str(t.get("name", "")).casefold()
+                or search in str(t.get("id", t.get("teamId", "")))
+                or search in members_label(t).casefold()
+                or search in str(t.get("institution", "")).casefold()
+            )
+            and (
+                self.query_one("#ladder-filter", Select).value == "all"
+                or t.get("eligible", t.get("prizeEligible")) is True
+            )
         ]
         self.fill(
             self.query_one("#ladder-table", DataTable),
@@ -738,6 +858,14 @@ class BattlecodeApp(ArenaActions, App):
                         t.get("wins", (t.get("record") or {}).get("wins", "n/a")),
                         members_label(t),
                         t.get("id", t.get("teamId")),
+                        (t.get("institution") or {}).get("name", "n/a")
+                        if isinstance(t.get("institution"), dict)
+                        else t.get("institution", "n/a"),
+                        "Yes"
+                        if t.get("eligible", t.get("prizeEligible")) is True
+                        else "No"
+                        if t.get("eligible", t.get("prizeEligible")) is False
+                        else "n/a",
                     ),
                 )
                 for i, t in selected
@@ -754,7 +882,9 @@ class BattlecodeApp(ArenaActions, App):
             f"{len(self.ladder)} teams · {len(selected)} shown · {'synthetic demo' if self.api.demo else 'live API'} · win rate n/a when records are unavailable"
         )
         self.query_one("#ladder-challenge", Button).disabled = not bool(selected)
+        self.query_one("#ladder-profile", Button).disabled = not bool(selected)
 
+    @on(Select.Changed, "#ladder-filter")
     @on(Input.Changed, "#ladder-search")
     def ladder_search(self) -> None:
         self.render_ladder()
@@ -834,8 +964,12 @@ class BattlecodeApp(ArenaActions, App):
     @on(DataTable.RowSelected, "#games-table")
     @on(DataTable.RowSelected, "#overview-games")
     def battle_selected(self, event: DataTable.RowSelected) -> None:
-        self.battle_id = int(str(event.row_key.value))
-        self.action_view("games")
+        key = str(event.row_key.value)
+        if key.startswith("sim:"):
+            self.open_simulated_match(key)
+            return
+        self.battle_id = int(key)
+        self.action_view("my-games")
         normalized = self.filtered_battles()
         index = next((i for i, b in enumerate(normalized) if b["id"] == self.battle_id), 0)
         self.query_one("#games-table", DataTable).move_cursor(row=index)
@@ -922,7 +1056,7 @@ class BattlecodeApp(ArenaActions, App):
 
     @on(DataTable.RowSelected, "#ladder-table")
     def ladder_selected(self, event: DataTable.RowSelected) -> None:
-        self.prepare_challenge(int(str(event.row_key.value)))
+        self.open_public_team(int(str(event.row_key.value)))
 
     def prepare_challenge(self, ident: int) -> None:
         self.action_view("challenge")
@@ -1127,13 +1261,33 @@ class BattlecodeApp(ArenaActions, App):
             )
             return False
         self.mutating = self.auth_changing = True
-        for group in ("sync", "bot-detail", "game-detail", "download"):
+        for group in (
+            "sync",
+            "bot-detail",
+            "game-detail",
+            "download",
+            "site-api",
+            "site-profile",
+            "site-account",
+            "site-tournament",
+            "site-game",
+        ):
             self.workers.cancel_group(self, group)
         self.update_settings()
         return True
 
     async def replace_api(self, api) -> None:
-        for group in ("sync", "bot-detail", "game-detail", "download"):
+        for group in (
+            "sync",
+            "bot-detail",
+            "game-detail",
+            "download",
+            "site-api",
+            "site-profile",
+            "site-account",
+            "site-tournament",
+            "site-game",
+        ):
             self.workers.cancel_group(self, group)
         await asyncio.sleep(0)
         old = self.api
@@ -1288,6 +1442,7 @@ class BattlecodeApp(ArenaActions, App):
             self.update_settings()
 
     def reset_account(self) -> None:
+        self.clear_site_account()
         self.team = {}
         self.submissions = []
         self.battles = []
@@ -1452,6 +1607,7 @@ class BattlecodeApp(ArenaActions, App):
                         (
                             e["name"],
                             e["map"],
+                            e.get("mode", "Replay"),
                             e["rounds"],
                             e["winner"],
                             date_label(e["imported_at"]),
@@ -1461,6 +1617,7 @@ class BattlecodeApp(ArenaActions, App):
                 ],
             )
             self.query_one("#replays-empty").display = not bool(self.local_replays)
+            self.render_site_library()
             if not self.local_replays:
                 self.local_replay_id = None
                 self.query_one("#watch-replay", Button).disabled = True
@@ -1485,6 +1642,7 @@ class BattlecodeApp(ArenaActions, App):
     @work(group="replay", exclusive=True)
     async def open_replay_file(self, value: str, *, import_file: bool) -> None:
         if not value.strip():
+            self.status("Choose a local replay file first.")
             self.query_one("#replays-status", Static).update("Choose a local replay file first.")
             return
         try:
@@ -1495,6 +1653,17 @@ class BattlecodeApp(ArenaActions, App):
                 self.render_library()
             else:
                 replay = await asyncio.to_thread(load_replay, value)
+                source = Path(value.strip().strip("\"'")).expanduser().resolve()
+                entry = next(
+                    (
+                        entry
+                        for entry in self.local_replays
+                        if self.library.path(entry["id"]).resolve() == source
+                    ),
+                    None,
+                )
+                if entry:
+                    replay = replace(replay, bots=(entry["bot_a"], entry["bot_b"]))
             self.query_one("#replays-status", Static).update(
                 "Replay ready. Files remain on this computer."
             )

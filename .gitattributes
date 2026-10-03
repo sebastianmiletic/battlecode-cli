@@ -1,0 +1,4 @@
+# Content-hashed official maps must retain their exact bytes on every platform.
+src/battlecode_cli/assets/maps/* -text
+# Retain the original third-party license bytes, including upstream CRLF/spacing.
+src/battlecode_cli/assets/web/*-OFL.txt -text -whitespace

@@ -19,15 +19,16 @@ import time
 import uuid
 import zipfile
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+from importlib.resources import files
 from pathlib import Path, PurePosixPath
 
 from filelock import FileLock
 
 from .bots import PreparedBot, prepare_bot
 from .config import atomic_write, data_dir, redact
-from .replays import clean_label, load_replay, parse_map, path_value
+from .replays import ReplayLibrary, clean_label, load_replay, parse_map, path_value
 
 MAX_MAPS = 1000
 MAX_MAP_BYTES = 1024 * 1024
@@ -103,6 +104,18 @@ class MapLibrary:
         if len(result) > MAX_MAPS:
             raise ArenaError("Map library exceeds its 1,000-map limit.")
         return sorted(result, key=lambda entry: (entry["name"].casefold(), entry["id"]))
+
+    def ensure_official(self) -> dict:
+        """Ship all 15 unchanged maps from unswbc 1.2.2, including offline installs."""
+        resources = files("battlecode_cli").joinpath("assets/maps")
+        return self.import_blobs(
+            [
+                (entry.name, entry.read_bytes())
+                for entry in resources.iterdir()
+                if entry.name.endswith(".map")
+            ],
+            origin="official",
+        )
 
     def path(self, ident: str) -> Path:
         if not re.fullmatch(r"[a-f0-9]{24}", ident):
@@ -461,8 +474,15 @@ async def run_process(
 
 
 class ArenaRunner:
-    def __init__(self, store: ArenaStore, maps: MapLibrary, command: list[str] | None = None):
+    def __init__(
+        self,
+        store: ArenaStore,
+        maps: MapLibrary,
+        command: list[str] | None = None,
+        library: ReplayLibrary | None = None,
+    ):
         self.store, self.maps = store, maps
+        self.library = library if library is not None else ReplayLibrary()
         self.command = command
         self.cancel = asyncio.Event()
 
@@ -491,6 +511,7 @@ class ArenaRunner:
             "id": ident,
             "created_at": datetime.now(UTC).isoformat(),
             "status": "running",
+            "mode": "Simulation",
             "total": plan.count,
             "bots": [
                 {"label": f"{i + 1}: {bot.label}", "sha256": bot.prepared.digest}
@@ -527,6 +548,7 @@ class ArenaRunner:
                             seed = (plan.seed + repeat) % 2**64
                             game = {
                                 "index": index,
+                                "mode": "Simulation",
                                 "map": entry["name"],
                                 "map_id": entry["id"],
                                 "a": a,
@@ -571,8 +593,22 @@ class ArenaRunner:
                                     raise ArenaError(
                                         "Runner saved an unfinished replay; result excluded."
                                     )
+                                replay = replace(
+                                    replay, bots=(job["bots"][a]["label"], job["bots"][b]["label"])
+                                )
                                 game["summary"] = replay.summary()
                                 game["diagnostics"] = replay.diagnostics
+                                try:
+                                    saved, _ = await asyncio.to_thread(
+                                        self.library.import_file,
+                                        replay_path,
+                                        mode="Simulation",
+                                        bot_names=replay.bots,
+                                    )
+                                    game["library_id"] = saved["id"]
+                                except (ValueError, OSError) as error:
+                                    # The original run replay is already saved even if the library is full.
+                                    game["library_error"] = redact(str(error))[:400]
                                 game["map_corrections"] = bool(
                                     re.search(r"map: \d+ defects? found", output)
                                 )
@@ -633,7 +669,7 @@ def report(job: dict) -> str:
     from .models import record_label, winrate
 
     parts = [
-        f"Benchmark {job['id']}",
+        f"Simulation {job['id']}",
         f"{job['status'].upper()} · {len(job['games'])}/{job['total']} games · base seed {job['seed']}",
         "",
         "BOT COMPARISON",

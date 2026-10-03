@@ -51,10 +51,16 @@ async def test_dashboard_navigation_and_details(size):
         overview_table = app.query_one("#overview-games", DataTable)
         assert overview_table.row_count == 6
         assert overview_table.content_region.height >= 4
-        await pilot.press("2", "enter")
+        await pilot.press("2")
+        await pilot.pause(0.1)
+        assert app.focused is app.query_one("#bots-table", DataTable)
+        await pilot.press("enter")
         await pilot.pause(0.2)
         assert isinstance(app.screen, TextViewer)
-        await pilot.press("escape", "3", "enter")
+        await pilot.press("escape", "3")
+        await pilot.pause(0.1)
+        assert app.focused is app.query_one("#games-table", DataTable)
+        await pilot.press("enter")
         await pilot.pause(0.2)
         assert app.query_one("#game-parts", DataTable).row_count == 5
         assert app.game_id == 7200
@@ -78,7 +84,7 @@ async def test_dashboard_navigation_and_details(size):
         app.action_view("overview")
         await pilot.pause(0.1)
         # Header and nav labels must actually render, not just exist in widgets.
-        assert "BATTLECODE" in app.query_one("#wordmark", Static).render().plain
+        assert "UNSW\nBattlecode" in app.query_one("#wordmark", Static).render().plain
         nav = app.query_one("#nav")
         assert "Overview" in "".join(seg.text for seg in nav.render_line(0))
 
@@ -91,7 +97,7 @@ async def test_leaderboard_search_and_challenge_prefill():
         app.query_one("#ladder-search", Input).value = "atlas"
         await pilot.pause(0.2)
         assert app.query_one("#ladder-table", DataTable).row_count == 1
-        await pilot.press("tab", "enter")
+        await pilot.click("#ladder-challenge")
         await pilot.pause(0.2)
         assert app.query_one("#pages", ContentSwitcher).current == "arena"
         assert app.query_one("#arena-tabs", TabbedContent).active == "arena-online"

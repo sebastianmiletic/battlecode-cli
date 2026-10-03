@@ -3,7 +3,7 @@
 set -eu
 
 ROOT=$(CDPATH='' cd "$(dirname "$0")" && pwd)
-PACKAGE='https://github.com/sebastianmiletic/battlecode-cli/archive/refs/tags/v0.3.0.tar.gz'
+PACKAGE='https://github.com/sebastianmiletic/battlecode-cli/archive/refs/tags/v0.4.0.tar.gz'
 if [ -f "$0" ] && [ -f "$ROOT/src/battlecode_cli/__init__.py" ]; then
     PACKAGE=$ROOT
 fi

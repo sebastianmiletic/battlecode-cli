@@ -31,8 +31,11 @@ def winrate(item: dict) -> str:
 
 
 def record_label(item: dict) -> str:
-    wins, draws, losses = record(item)
-    return f"{wins}W {draws}D {losses}L"
+    source = item.get("record") if isinstance(item.get("record"), dict) else item
+    return " ".join(
+        f"{source.get(key) if source.get(key) is not None else 'n/a'}{suffix}"
+        for key, suffix in (("wins", "W"), ("draws", "D"), ("losses", "L"))
+    )
 
 
 def date_label(value: Any) -> str:

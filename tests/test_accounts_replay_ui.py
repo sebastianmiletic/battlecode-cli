@@ -157,9 +157,16 @@ async def test_mouse_navigation_replay_playback_seek_inspection_and_back(size, t
     app = BattlecodeApp(demo=True)
     async with app.run_test(size=size) as pilot:
         await pilot.pause(0.2)
-        # Real mouse navigation, not just calling action_view().
+        # Scroll the full website menu, then use an actual mouse click.
         nav = app.query_one("#nav")
-        assert await pilot.click(nav, offset=(4, 2))
+        nav.highlighted = app.nav_indices["games"]
+        await pilot.pause(0.1)
+        y = next(
+            line
+            for line in range(nav.size.height)
+            if "Games" in "".join(segment.text for segment in nav.render_line(line))
+        )
+        assert await pilot.click(nav, offset=(4, y))
         await pilot.pause(0.2)
         assert app.query_one("#pages", ContentSwitcher).current == "games"
         await pilot.click(app.query_one("#game-tabs", TabbedContent).get_tab("game-local"))

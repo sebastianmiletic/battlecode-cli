@@ -1,12 +1,12 @@
 # Arena
 
-Arena is a local benchmark coordinator for the official `unswbc` runner, not a new engine or server endpoint. Benchmarks do not upload, activate or challenge bots, affect server ELO, or send custom maps online.
+Arena is a local simulation coordinator for the official `unswbc` runner, not a new engine or server endpoint. Local games are labelled **Simulation**, not Unranked. Simulations do not upload, activate or challenge bots, affect server ELO, or send custom maps online. Both the terminal and [browser dashboard](browser.md) use the same runner and saved results.
 
 ## Inputs
 
-- Two version ZIPs or project folders containing `bot.toml`. Your own server submissions can be downloaded through Bots' **Arena A / Arena B** buttons.
+- Two version ZIPs or project folders containing `bot.toml`. Your own server submissions can be downloaded through **Submissions → Arena A / Arena B** in the terminal (Bots in the browser).
 - Optional opponents folder containing up to 20 shared source ZIPs/projects. Both candidates play each opponent, plus each other.
-- Official map text from `GET /maps` when authenticated, or the installed runner's bundled maps offline. Live server maps take precedence when supplied.
+- All 15 unchanged maps bundled with official `unswbc 1.2.2`, included offline with this client and selected initially. Choose the official/custom/all set or a checkbox subset. Official map text from authenticated `GET /maps` is also imported when supplied; the terminal's **Get official maps** can refresh from the installed toolkit.
 - Custom `.map`/`.txt` files, folders searched recursively, or ZIPs. Geometry and both starting teams are checked before copying; the official engine may still correct map defects. Corrections are flagged in results.
 
 Other teams' private submission source is not available through the API. Server challenges use active bots, not arbitrary inactive versions. Arena's **Online** tab uses the existing, confirmed challenge workflow, unranked by default. Ranked challenges use five server-selected maps; custom maps cannot be sent.
@@ -31,7 +31,7 @@ Games run sequentially, preserving navigation responsiveness and avoiding uncont
 
 ## Results and diagnostics
 
-Each completed game retains its official replay, a bounded/redacted runner log, seed, seat assignments, wall time, final state and diagnostics. Results show all games; any successful game's replay opens in the built-in player. Watching it also adds a content-deduplicated local library copy.
+Each completed game retains its official replay, a bounded/redacted runner log, seed, seat assignments, wall time, final state and diagnostics. Results show all games; any successful game's replay opens in the built-in player with timeline playback. Every finished replay is also copied automatically into the content-deduplicated local library with **Simulation** metadata and readable version labels. If the 1,000-entry library is full or copying fails, the original run replay remains saved and the result records the library issue. Raw official replay bytes are not altered.
 
 The report includes:
 
@@ -43,7 +43,7 @@ The report includes:
 
 Errors, timeouts and unfinished official replays are excluded from win-rate denominators. Draws remain in the denominator. A completed batch can contain errors, which are counted separately. Local win rates are not ELO predictions. Small batches and a fixed map pool can overfit.
 
-JSON exports contain the complete structured batch; CSV exports contain one row per game. Exports ask for a destination and confirmation, including overwrite disclosure. Formula-leading CSV text is escaped. No export goes online. The full report summarizes the first 50 decided games and first 20 errors; JSON contains every game.
+JSON exports contain the complete structured batch; CSV exports contain one row per game. Terminal exports ask for a destination and confirmation, including overwrite disclosure. Browser exports confirm and then use the browser's download handling. Formula-leading CSV text is escaped. No export goes online. The full report summarizes the first 50 decided games and first 20 errors; JSON contains every game.
 
 ## Bounds and storage
 

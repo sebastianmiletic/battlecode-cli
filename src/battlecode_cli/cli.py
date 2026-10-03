@@ -59,6 +59,21 @@ def parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print a read-only replay summary as JSON, without launching the UI",
     )
+    web = sub.add_parser(
+        "web", help="Open the local browser dashboard, keeping the terminal UI available"
+    )
+    web.add_argument(
+        "--no-browser", action="store_true", help="Print the local URL without opening a browser"
+    )
+    web.add_argument(
+        "--port", type=int, default=0, help="Loopback port (default: choose a free port)"
+    )
+    web.add_argument(
+        "--demo",
+        dest="web_demo",
+        action="store_true",
+        help="Synthetic account data, no server calls",
+    )
     return cli
 
 
@@ -198,6 +213,23 @@ def main() -> None:
     args = parser().parse_args()
     console = Console(highlight=False)
     try:
+        if args.command == "web":
+            if not 0 <= args.port <= 65535:
+                console.print("Use a port between 0 and 65535. Port 0 chooses a free port.")
+                raise SystemExit(1)
+            from .web import serve
+
+            try:
+                serve(
+                    demo=args.demo or args.web_demo,
+                    port=args.port,
+                    open_browser=not args.no_browser,
+                    refresh=args.refresh,
+                )
+            except (ValueError, OSError, LockTimeout) as error:
+                console.print(Text(redact(str(error))))
+                raise SystemExit(1) from None
+            return
         if args.command == "auth":
             raise SystemExit(asyncio.run(auth_command(args, console)))
         if args.command == "status":

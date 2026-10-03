@@ -1,15 +1,15 @@
 # battlecode-cli
 
-A quiet terminal dashboard for [UNSW Battlecode](https://game.battlecode.au). Bot versions, local benchmarks, live standings and replay playback, with mouse and keyboard controls.
+A website-shaped terminal client for [UNSW Battlecode](https://game.battlecode.au), with the full navigation, team profiles, standings, submissions, battles, tournaments, documentation, replay visualiser and local map editor. **Arena sits directly beneath Submissions.** An optional browser companion is included.
 
-![Dashboard, synthetic demo data](docs/dashboard.svg)
+![Terminal Overview, synthetic account data](docs/dashboard.svg)
 
 ## Install from GitHub
 
 ### macOS / Linux
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.3.0/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.4.0/install.sh | sh
 ```
 
 ### Windows
@@ -17,7 +17,7 @@ curl -fsSL https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.
 Run in PowerShell, preferably inside Windows Terminal:
 
 ```powershell
-irm https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.3.0/install.ps1 | iex
+irm https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.4.0/install.ps1 | iex
 ```
 
 These scripts install [uv](https://docs.astral.sh/uv/) if needed, obtain Python 3.13, install the versioned GitHub source archive into your user account, and configure PATH. No administrator access or shell alias is needed. Review the [shell](install.sh) or [PowerShell](install.ps1) script before executing it if you prefer.
@@ -25,7 +25,9 @@ These scripts install [uv](https://docs.astral.sh/uv/) if needed, obtain Python 
 **Open a new terminal**, then type:
 
 ```sh
-battlecode-cli
+battlecode-cli       # full terminal client
+battlecode-cli --demo # synthetic preview, no account required
+battlecode-cli web   # optional browser dashboard
 ```
 
 `battlecode` remains a supported alias. The installer also prints the executable's full path for launching immediately in a terminal whose PATH has not refreshed.
@@ -40,13 +42,34 @@ sh install.sh
 
 On Windows, use `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1` instead of `sh install.sh`.
 
-Already have uv and Git? Use `uv tool install --python 3.13 --from "git+https://github.com/sebastianmiletic/battlecode-cli.git@v0.3.0" battlecode-cli`, then `uv tool update-shell`. Python 3.11+ is supported; the installers choose 3.13.
+Already have uv and Git? Use `uv tool install --python 3.13 --from "git+https://github.com/sebastianmiletic/battlecode-cli.git@v0.4.0" battlecode-cli`, then `uv tool update-shell`. Python 3.11+ is supported; the installers choose 3.13.
 
 Update by rerunning the installer from a current checkout. Uninstall with `uv tool uninstall battlecode-cli`; saved accounts and replay files are preserved. Delete saved API keys in the dashboard before uninstalling if you also want their local secrets removed.
 
+## Full website-style TUI
+
+The terminal follows the supplied website's **Overview / Updates**, **Compete**, **Build** and **Manage** navigation, not just its Overview. All 17 destinations have native work surfaces. Dark tinted neutrals, divided metrics, mint charts/focus, tables, tabs and profile sections follow the saved page. Terminal cells use your terminal font and a text brand mark; this is not browser-pixel or universal PNG rendering.
+
+- **Compete:** searchable Leaderboard with members/institutions/eligibility, Ratings and history, public Battles/Games with pagination, and readable tournament brackets.
+- **Build:** Submissions versions/upload, Arena Simulation/Online/Results, all 23 Documentation topics, Visualiser and a local Map editor.
+- **Manage:** Team profile with members/records/eligibility/join requests, Your battles, Your games and Find a team.
+- **Account / API keys:** verified named keys, one active account and explicit official-site account management.
+
+Public announcements and global tables use bounded, credential-free official-page reads. Account records and actions use documented JSON endpoints. Original offline technical notes accompany the guide; refreshing a topic displays the full current official article as inert text. Team settings, stars, membership and account changes link to the official website because mutation APIs are not documented. No reference-account records are embedded as fake live data.
+
+See [terminal views and controls](docs/terminal.md).
+
+## Optional browser dashboard
+
+`battlecode-cli web` opens a local browser dashboard with the supplied, unchanged Battlecode logo and reference-style sidebar, statistics row, tables and charts. `battlecode-cli web --demo` shows synthetic account data. No Node, cloud service or extra runtime dependency is needed. The server is loopback-only; Ctrl+C stops it and preserves finished simulation games. See [browser controls and security](docs/browser.md).
+
+Arena includes all 15 official toolkit maps offline, checkbox map sets, your uploaded/local bots, shared opponents and repeats per map. Every finished game's replay is saved automatically. Games distinguishes **Ranked**, **Unranked** and **Simulation**; local runs never affect ELO. The browser player includes a draggable timeline, stepping, speeds, frame jump, map inspection and team statistics.
+
+The browser retains its compact six-page layout; it does not replace the full native terminal navigation.
+
 ## First launch
 
-With no connected account, the dashboard opens **API keys** and focuses the hidden key field.
+With no connected account, the terminal opens **API keys** and focuses the hidden key field. In the browser, select **API keys** or continue using the offline Arena and replay library.
 
 1. Click **Open team page**, then create a key at [game.battlecode.au/team](https://game.battlecode.au/team).
 2. Paste it into the hidden input. Optionally give it a friendly account label.
@@ -91,14 +114,17 @@ Click the sidebar, table rows, buttons, inputs and selectors. Use the wheel to s
 | Key | View / action |
 | --- | --- |
 | `1` | Overview: large ELO/rank, history plots, active bot, recent games |
-| `2` | Bots: versions, details, activation and Upload tab |
-| `3` | Games: ranked/unranked matches and Local replays tab |
-| `4` | Arena: local benchmarks, Online challenges and Results |
+| `2` | Submissions: versions, details, activation and Upload tab |
+| `3` | Your games: Ranked/Unranked/Simulation and Local replays |
+| `4` | Arena: Simulation, Online challenges and Results |
 | `5` | Leaderboard: all teams, members, ELO and available win rates |
 | `6` | API keys: account management and local file locations |
 | `r` | Refresh |
 | `Tab` / `Shift+Tab` | Move between controls |
 | Arrows / `Enter` | Select and inspect table rows |
+| `Ctrl+B` | Collapse / restore website navigation |
+| `Ctrl+T` | Toggle dark / light theme |
+| `Ctrl+K` | Documentation search |
 | `Ctrl+p` | Command palette |
 | `?` | Help |
 | `Ctrl+q` | Quit |
@@ -107,19 +133,19 @@ Input fields keep typing precedence over navigation shortcuts. A supporting term
 
 The dashboard refreshes every 45 seconds (`--refresh 60` changes this). Failed requests preserve and label the last successful snapshot as stale. Rejected keys pause polling; writes are never retried automatically.
 
-### Bots and challenges
+### Submissions and challenges
 
 Win rate is **wins / (wins + draws + losses)**. Draws count in the denominator, not as half a win. No completed games or an incomplete record displays `n/a`; a wins-only leaderboard record is not treated as 100%.
 
-Select a built inactive bot, click **Activate**, then confirm. ZIP downloads and build/per-map details are available on Bots. Uploads require `bot.toml` at the ZIP root and a maximum ZIP size of 4 MB. Folder packaging follows `project.include`, excludes build output, checks for sensitive files, and never compiles or executes your source locally. Successful server builds may automatically become active.
+Select a built inactive bot, click **Activate**, then confirm. ZIP downloads and build/per-map details are available on Submissions. Uploads require `bot.toml` at the ZIP root and a maximum ZIP size of 4 MB. Folder packaging follows `project.include`, excludes build output, checks for sensitive files, and never compiles or executes your source locally. Successful server builds may automatically become active.
 
 Practice is the default. Ranked challenges are five-game series on server-selected maps and affect rating. Every upload, activation and challenge has a confirmation gate that defaults to Cancel. If a write times out, refresh before trying again because the server may have accepted it.
 
 ## Games and local replays
 
-Select a battle on Games, then an individual game. **View replay** downloads its official `.replay`, imports a local copy and opens the built-in player. **Download replay** only saves the file. Signed download URLs never receive your bearer key.
+Select a series in **Your battles** or **Your games**, then an individual game. **View replay** downloads its official `.replay`, imports a local copy and opens the built-in player. **Download replay** only saves the file. Signed download URLs never receive your bearer key.
 
-On **Games → Local replays**, browse for `.replay`, `.replay.gz`, or [supported replay JSON](docs/replay-format.md), then click **Import**. Click a library row or **Watch** to play. Imports are content-deduplicated local copies; removal confirms deletion of that copy and leaves your original file untouched.
+On **Your games → Local replays** (also reachable from Visualiser), browse for `.replay`, `.replay.gz`, or [supported replay JSON](docs/replay-format.md), then click **Import**. Click a library row or **Watch** to play. Imports are content-deduplicated local copies; removal confirms deletion of that copy and leaves your original file untouched.
 
 **Replay imports are not server uploads.** Battlecode has no replay-upload API. No API key is needed to import, decode or watch a local file.
 
@@ -155,16 +181,24 @@ The top-right **See more of my projects** link opens the GitHub repository.
 ## Arena
 
 1. Open **Arena (4)**. If needed, click **Install runner** and confirm the user-level installation of the official `unswbc` toolkit (about 200 MB). Alternatively: `uv tool install --python 3.13 'unswbc>=1.2.2,<2'`.
-2. Choose two bot ZIPs or `bot.toml` project folders. On Bots, **Arena A / Arena B** can download your own selected submission into either slot.
-3. Click **Get official maps**, or expand **Import custom maps** and import a folder/ZIP containing hundreds of `.map`/`.txt` files. Select maps, or use **Select all**.
-4. Optionally add a folder of other users' shared bot projects/ZIPs, change repeats/seed/timeout, then **Review benchmark** and confirm.
-5. Watch Results, open any game's replay, read the full report or export JSON/CSV. **Stop** keeps completed results. Previous batches remain available after restarting.
+2. Choose two bot ZIPs or `bot.toml` project folders. On Submissions, **Arena A / Arena B** can download your own selected submission into either slot.
+3. All 15 maps bundled with official `unswbc 1.2.2` are included and selected initially, even offline. Select a subset/map set, refresh official maps, or import a folder/ZIP containing hundreds of custom `.map`/`.txt` files.
+4. Optionally add a folder of your other bots or other users' shared source projects/ZIPs, change repeats/seed/timeout, then **Review simulation** and confirm.
+5. Watch Results, open any game's replay, read the full report or export JSON/CSV. Replays are saved automatically with the run and copied into the saved replay library. **Stop** keeps completed results. Previous batches remain available after restarting.
 
 Both candidates play each shared opponent, plus each other, on every selected map. Seat swaps are on by default; repeats use the same seed schedule for fair comparisons. Bots and maps are snapshotted into a private workspace. Only the official **judge sandbox** runs bots; no native fallback is permitted. Runner processes receive OS/toolchain essentials, not Battlecode, AI-provider or GitHub credential environment variables.
 
 Reports include W/D/L, win rates, per-map records, mean rounds, growth, splits, every recorded movement/command, sprint counts, queen-loss timing and death reasons. Rule-based improvement pointers suggest what to inspect, not proven strategic causes or AI analysis. Failed games are excluded from win rates. Map corrections are flagged; engine validation remains authoritative. See [Arena details and limits](docs/arena.md).
 
-**Custom maps and local results stay local.** Local games do not affect ELO. Other teams' private bot source cannot be downloaded through the API; use shared local sources to benchmark them. **Arena → Online** challenges a team's active bot using your active server bot, defaulting to unranked. It does not compare two inactive server submissions or upload custom maps.
+**Custom maps and local results stay local.** Local games are labelled **Simulation**, not Unranked, and do not affect ELO. Other teams' private bot source cannot be downloaded through the API; use shared local sources to benchmark them. **Arena → Online** challenges a team's active bot using your active server bot, defaulting to unranked. It does not compare two inactive server submissions or upload custom maps.
+
+## Local map editor
+
+Create a map, paint pearl spawns, kelp, paired portals and starting queens, or edit the complete official text format in **Source**. Click tiles, or use arrows and Enter on the board. Dimensions, symmetry, edge direction, spawn gaps and portal IDs are editable. Undo/redo and count normalization are available.
+
+**Validate** checks directives, counts, bounds, alternating starting teams, adjacent non-overlapping bodies and portal pairs. **Preview** is a read-only starting-state view. **Save map** reviews the destination; **Add to Arena** reviews a local custom-library copy. Neither uploads a file nor starts execution. The official engine remains authoritative.
+
+![Native map editor, synthetic local draft](docs/map-editor.svg)
 
 ## Claude / Codex
 
@@ -181,6 +215,6 @@ uv run battlecode-cli --demo
 uv tool install --editable .
 ```
 
-CI tests Python 3.11/3.13 on macOS, Linux and Windows, builds the package and verifies the installed commands. Tests use mocked HTTP, an in-memory keyring and temporary files; real network requests are prohibited. No real bots are uploaded, activated or challenged during tests.
+CI tests Python 3.11/3.13 on macOS, Linux and Windows, builds the package and verifies the installed commands. Native UI tests include the full navigation, map editing, profiles, bracket links, account isolation and 80×24 layouts. A separate Chromium job checks the browser workflows and mobile layout. Tests use mocked server HTTP, an in-memory keyring, temporary files and an isolated loopback server; actual Battlecode requests are prohibited. No real bots are uploaded, activated or challenged during tests.
 
 Official [API documentation](https://game.battlecode.au/docs/api). Server permissions, build states, quotas and rate limits still apply. This is an unofficial client. MIT licensed.

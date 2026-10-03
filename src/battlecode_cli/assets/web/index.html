@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Battlecode · Overview</title>
+    <link rel="icon" href="/assets/brand.png" />
+    <link rel="stylesheet" href="/assets/dashboard.css" />
+    <script src="/assets/dashboard.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#overview" aria-label="Battlecode overview"
+        ><img
+          src="/assets/brand.png"
+          width="292"
+          height="88"
+          alt="UNSW Battlecode"
+      /></a>
+      <div class="sidebar-caption">
+        <span>Battlecode 2026</span><span>Local dashboard</span>
+      </div>
+      <nav id="navigation">
+        <a href="#overview" data-page="overview" aria-current="page"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" /></svg
+          >Overview</a
+        >
+        <a href="#bots" data-page="bots"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 3h12v18H6zM9 7h6M9 11h6M9 15h4" /></svg
+          >Bots</a
+        >
+        <a href="#games" data-page="games"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 3h18v18H3zM3 10h18M10 3v18" /></svg
+          >Games</a
+        >
+        <a href="#arena" data-page="arena"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="m4 3 17 17M3 4l3-1-1 4M4 21 21 4M17 3l4 1-1 3M3 17l4 4M17 21l4-4"
+            /></svg
+          >Arena</a
+        >
+        <a href="#leaderboard" data-page="leaderboard"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 21V10h5v11M10 21V3h5v18M17 21V7h4v14" /></svg
+          >Leaderboard</a
+        >
+        <a href="#keys" data-page="keys"
+          ><svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="8" cy="8" r="5" />
+            <path d="m12 12 9 9M16 16l3-3M19 19l3-3" /></svg
+          >API keys</a
+        >
+      </nav>
+      <div class="sidebar-bottom">
+        <span>Runs on your machine</span
+        ><button id="refresh" class="text-button">↻ Refresh data</button
+        ><span id="sync-time">Loading…</span>
+      </div>
+    </aside>
+    <main id="main" tabindex="-1">
+      <header class="page-header">
+        <div>
+          <p id="eyebrow" class="eyebrow">Your team</p>
+          <h1 id="page-title">Overview</h1>
+        </div>
+        <div class="header-right">
+          <a
+            class="projects"
+            href="https://github.com/sebastianmiletic/battlecode-cli"
+            target="_blank"
+            rel="noopener noreferrer"
+            >See more of my projects ↗</a
+          ><button id="header-action" class="primary">Find an opponent</button>
+        </div>
+      </header>
+      <p id="notice" class="notice" role="status" hidden></p>
+      <section id="page-overview" class="page">
+        <div class="metrics" aria-label="Team statistics">
+          <div>
+            <h2>Rating</h2>
+            <p class="figure" id="metric-elo">···</p>
+            <span class="metric-note">ELO</span>
+          </div>
+          <div>
+            <h2>Rank</h2>
+            <p class="figure" id="metric-rank">···</p>
+            <span class="metric-note">Team standing</span>
+          </div>
+          <div>
+            <h2>Record</h2>
+            <div id="metric-record" class="record-figures">
+              <div><strong>···</strong><span>W</span></div>
+              <div><strong>···</strong><span>D</span></div>
+              <div><strong>···</strong><span>L</span></div>
+            </div>
+          </div>
+          <div class="submission-metric">
+            <h2 class="eyebrow">Active submission</h2>
+            <p id="metric-bot">···</p>
+            <a href="#bots">Manage versions</a>
+          </div>
+        </div>
+        <div class="overview-grid">
+          <section class="panel">
+            <header>
+              <h2>Recent battles</h2>
+              <span>Last 5</span>
+            </header>
+            <div class="table-scroll">
+              <table aria-label="Recent battles">
+                <tbody id="recent-battles">
+                  <tr>
+                    <td class="empty">Loading your battles…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <a class="panel-foot" href="#games">Your games</a>
+          </section>
+          <section class="panel">
+            <header>
+              <h2>Ladder</h2>
+              <span id="nearby-label">Around you</span>
+            </header>
+            <div class="table-scroll">
+              <table aria-label="Nearby teams">
+                <tbody id="nearby-teams">
+                  <tr>
+                    <td class="empty">Loading standings…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <a class="panel-foot" href="#leaderboard">Full leaderboard</a>
+          </section>
+          <section class="panel chart-panel">
+            <header>
+              <h2>Team rating</h2>
+              <span id="elo-history-origin"></span>
+            </header>
+            <div
+              id="elo-chart"
+              class="chart"
+              aria-label="Team ELO history"
+            ></div>
+            <div class="panel-foot">History follows elapsed time</div>
+          </section>
+          <section class="panel chart-panel">
+            <header>
+              <h2>Rank history</h2>
+              <span id="rank-history-origin"></span>
+            </header>
+            <div
+              id="rank-chart"
+              class="chart"
+              aria-label="Team rank history"
+            ></div>
+            <div class="panel-foot" id="rank-history-note">Lower is better</div>
+          </section>
+        </div>
+      </section>
+      <section id="page-bots" class="page" hidden>
+        <div class="tabs" role="tablist" aria-label="Bots">
+          <button role="tab" aria-selected="true" data-tab="bots-versions">
+            Versions</button
+          ><button role="tab" aria-selected="false" data-tab="bots-upload">
+            Upload
+          </button>
+        </div>
+        <div id="bots-versions" class="tab-panel" role="tabpanel">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Version</th>
+                  <th>Bot</th>
+                  <th>State</th>
+                  <th>Record</th>
+                  <th>Win rate</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="bot-rows"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="bots-upload" class="tab-panel narrow" role="tabpanel" hidden>
+          <form id="upload-form">
+            <label
+              >Bot ZIP or local project folder
+              <div class="input-with-button">
+                <input
+                  id="upload-path"
+                  placeholder="~/Coding/my-bot"
+                  required
+                /><button
+                  type="button"
+                  data-file="bot"
+                  data-target="upload-path"
+                >
+                  Choose ZIP
+                </button>
+              </div></label
+            ><label
+              >Version name<input
+                id="upload-name"
+                maxlength="120"
+                required /></label
+            ><label
+              >Description <span class="muted">(optional)</span
+              ><textarea
+                id="upload-description"
+                maxlength="2000"
+                rows="3"
+              ></textarea>
+            </label>
+            <p class="muted">A successful server build may become active.</p>
+            <button class="primary" type="submit">Review upload</button>
+          </form>
+        </div>
+      </section>
+      <section id="page-games" class="page" hidden>
+        <div class="tabs" role="tablist" aria-label="Games">
+          <button role="tab" aria-selected="true" data-tab="games-matches">
+            Matches</button
+          ><button role="tab" aria-selected="false" data-tab="games-replays">
+            Saved replays
+          </button>
+        </div>
+        <div id="games-matches" class="tab-panel" role="tabpanel">
+          <div class="toolbar">
+            <label for="games-filter" class="sr-only">Game mode</label
+            ><select id="games-filter">
+              <option value="all">All games</option>
+              <option value="Ranked">Ranked</option>
+              <option value="Unranked">Unranked</option>
+              <option value="Simulation">Simulation</option></select
+            ><span class="muted" id="game-count"></span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Opponent / matchup</th>
+                  <th>Mode</th>
+                  <th>Result</th>
+                  <th>Map / series</th>
+                  <th>Δ ELO</th>
+                  <th>Replay</th>
+                </tr>
+              </thead>
+              <tbody id="game-rows"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="games-replays" class="tab-panel" role="tabpanel" hidden>
+          <form id="replay-import" class="inline-form">
+            <label class="sr-only" for="replay-path">Replay file path</label
+            ><input
+              id="replay-path"
+              placeholder="Local .replay, .replay.gz or replay JSON"
+              required
+            /><button
+              type="button"
+              data-file="replay"
+              data-target="replay-path"
+            >
+              Choose file</button
+            ><button type="submit" class="primary">Import</button
+            ><button id="sample-replay" type="button">Try sample</button>
+          </form>
+          <p class="muted">
+            Simulation replays are saved automatically. Imports stay on this
+            machine.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>File</th>
+                  <th>Map</th>
+                  <th>Mode</th>
+                  <th>Rounds</th>
+                  <th>Winner</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="replay-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      <section id="page-arena" class="page" hidden>
+        <div class="tabs" role="tablist" aria-label="Arena">
+          <button role="tab" aria-selected="true" data-tab="arena-simulation">
+            Simulation</button
+          ><button role="tab" aria-selected="false" data-tab="arena-online">
+            Online</button
+          ><button role="tab" aria-selected="false" data-tab="arena-results">
+            Results
+          </button>
+        </div>
+        <div id="arena-simulation" class="tab-panel" role="tabpanel">
+          <div class="runner-bar">
+            <span id="runner-state">Official unswbc judge sandbox</span
+            ><button id="install-runner" hidden>Install runner</button>
+          </div>
+          <form id="simulation-form">
+            <div class="arena-columns">
+              <div class="arena-bots">
+                <h2>Matchup</h2>
+                <label
+                  >Bot A<select id="arena-a-source">
+                    <option value="local">Local ZIP or project folder</option>
+                  </select></label
+                >
+                <div id="arena-a-local" class="input-with-button">
+                  <input
+                    id="arena-a-path"
+                    placeholder="~/Coding/bot-a"
+                    aria-label="Bot A local path"
+                  /><button
+                    type="button"
+                    data-file="bot"
+                    data-target="arena-a-path"
+                  >
+                    Choose ZIP
+                  </button>
+                </div>
+                <label
+                  >Bot B<select id="arena-b-source">
+                    <option value="local">Local ZIP or project folder</option>
+                  </select></label
+                >
+                <div id="arena-b-local" class="input-with-button">
+                  <input
+                    id="arena-b-path"
+                    placeholder="~/Coding/bot-b"
+                    aria-label="Bot B local path"
+                  /><button
+                    type="button"
+                    data-file="bot"
+                    data-target="arena-b-path"
+                  >
+                    Choose ZIP
+                  </button>
+                </div>
+                <details>
+                  <summary>Additional opponents</summary>
+                  <label
+                    >Folder of shared bot ZIPs or projects<input
+                      id="arena-opponents"
+                      placeholder="~/Coding/opponents"
+                  /></label>
+                  <p class="muted">
+                    Both candidates play each opponent. Other teams' private
+                    source is not available.
+                  </p>
+                </details>
+                <div class="run-settings">
+                  <label
+                    >Repeats per map<input
+                      id="arena-repeats"
+                      type="number"
+                      min="1"
+                      max="10"
+                      value="1"
+                      required /></label
+                  ><label
+                    >Base seed<input
+                      id="arena-seed"
+                      inputmode="numeric"
+                      pattern="[0-9]+"
+                      value="0"
+                      required /></label
+                  ><label
+                    >Timeout (seconds)<input
+                      id="arena-timeout"
+                      type="number"
+                      min="30"
+                      max="3600"
+                      value="600"
+                      required
+                  /></label>
+                </div>
+                <label class="checkbox-label"
+                  ><input type="checkbox" id="arena-swap" checked />Swap seats
+                  for each map and seed</label
+                >
+                <p class="muted">
+                  Local games are Simulation. They never affect ELO.
+                </p>
+              </div>
+              <div class="arena-maps">
+                <div class="section-heading">
+                  <h2>Maps</h2>
+                  <label class="sr-only" for="map-set">Map set</label
+                  ><select id="map-set">
+                    <option value="official">All official maps</option>
+                    <option value="custom">Custom maps</option>
+                    <option value="all">All stored maps</option>
+                    <option value="selection">My selection</option>
+                  </select>
+                </div>
+                <div class="map-toolbar">
+                  <button
+                    id="maps-select-all"
+                    type="button"
+                    class="text-button"
+                  >
+                    Select all</button
+                  ><button id="maps-clear" type="button" class="text-button">
+                    Clear</button
+                  ><span id="map-count" class="muted"></span>
+                </div>
+                <div id="map-list" class="map-list"></div>
+                <details>
+                  <summary>Import custom maps</summary>
+                  <div class="input-with-button">
+                    <input
+                      id="map-import-path"
+                      placeholder="Folder, ZIP, .map or .txt"
+                      aria-label="Custom maps path"
+                    /><button
+                      type="button"
+                      data-file="maps"
+                      data-target="map-import-path"
+                    >
+                      Choose file
+                    </button>
+                  </div>
+                  <button id="import-maps" type="button">Review import</button>
+                  <p class="muted">
+                    Bulk folders and ZIPs supported, up to 1,000 unique maps.
+                  </p>
+                </details>
+              </div>
+            </div>
+            <div class="simulation-actions">
+              <div>
+                <strong id="simulation-count">Select bots and maps</strong>
+                <p class="muted">
+                  Replays, seeds and diagnostics are saved with the run.
+                </p>
+              </div>
+              <button id="run-simulation" type="submit" class="primary">
+                Review simulation
+              </button>
+            </div>
+          </form>
+        </div>
+        <div id="arena-online" class="tab-panel narrow" role="tabpanel" hidden>
+          <form id="challenge-form">
+            <p class="muted">Play other teams with your active server bot.</p>
+            <label
+              >Opponent team ID<input
+                id="challenge-team"
+                type="number"
+                min="1"
+                required /></label
+            ><label
+              >Mode<select id="challenge-mode">
+                <option value="unranked">Unranked: no rating change</option>
+                <option value="ranked">Ranked: five games, affects ELO</option>
+              </select></label
+            ><label id="online-map-label"
+              >Unranked map<select id="challenge-map">
+                <option value="">Server choice</option>
+              </select></label
+            >
+            <p id="challenge-note" class="muted">
+              Local sources and custom maps are not sent.
+            </p>
+            <button class="primary" type="submit">Review challenge</button>
+          </form>
+        </div>
+        <div id="arena-results" class="tab-panel" role="tabpanel" hidden>
+          <div class="toolbar">
+            <label class="sr-only" for="run-select">Saved simulation</label
+            ><select id="run-select">
+              <option value="">No simulations yet</option></select
+            ><button id="export-json" disabled>Export JSON</button
+            ><button id="export-csv" disabled>Export CSV</button>
+          </div>
+          <div id="run-status" class="run-status" hidden>
+            <div>
+              <strong id="run-heading"></strong>
+              <p id="run-current" class="muted"></p>
+              <progress
+                id="run-progress"
+                max="1"
+                value="0"
+                aria-label="Simulation progress"
+              ></progress>
+            </div>
+            <button id="stop-simulation" hidden>Stop simulation</button>
+          </div>
+          <div id="run-aggregates" class="comparison"></div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Game</th>
+                  <th>Map</th>
+                  <th>Bot A</th>
+                  <th>Bot B</th>
+                  <th>Winner</th>
+                  <th>Rounds</th>
+                  <th>Replay</th>
+                </tr>
+              </thead>
+              <tbody id="run-games"></tbody>
+            </table>
+          </div>
+          <details id="run-report" hidden>
+            <summary>Diagnostics &amp; per-map report</summary>
+            <pre id="report-text"></pre>
+          </details>
+        </div>
+      </section>
+      <section id="page-leaderboard" class="page" hidden>
+        <div class="toolbar">
+          <label class="sr-only" for="leaderboard-search"
+            >Search leaderboard</label
+          ><input
+            id="leaderboard-search"
+            type="search"
+            placeholder="Search teams, members or ID"
+          /><span id="leaderboard-count" class="muted"></span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Team</th>
+                <th>ELO</th>
+                <th>Win rate</th>
+                <th>Wins</th>
+                <th>Members</th>
+                <th>Challenge</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-rows"></tbody>
+          </table>
+        </div>
+      </section>
+      <section id="page-keys" class="page" hidden>
+        <p id="account-summary" class="muted"></p>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Label</th>
+                <th>Team</th>
+                <th>State</th>
+                <th>Key storage</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="account-rows"></tbody>
+          </table>
+        </div>
+        <form id="key-form" class="narrow">
+          <h2>Add an API key</h2>
+          <label
+            >New key<input
+              id="api-key"
+              type="password"
+              autocomplete="new-password"
+              spellcheck="false"
+              placeholder="bc_…"
+              required /></label
+          ><label
+            >Account label <span class="muted">(optional)</span
+            ><input
+              id="account-label"
+              maxlength="64"
+              placeholder="Your verified team name"
+          /></label>
+          <div class="toolbar">
+            <button class="primary" type="submit" value="connect">
+              Connect &amp; save</button
+            ><button id="key-save-only" type="button">Save only</button
+            ><button id="continue-offline" type="button">
+              Continue offline
+            </button>
+          </div>
+          <p class="muted">
+            Verified with GET /me before saving. OS keyring preferred.
+            macOS/Linux fallback uses owner-only, unencrypted files; Windows
+            requires Credential Manager.
+          </p>
+          <a
+            href="https://game.battlecode.au/team"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Create or revoke a key on your team page ↗</a
+          >
+        </form>
+      </section>
+      <footer class="main-footer">
+        <span id="footer-label">Local Battlecode client</span
+        ><span>Terminal: <code>battlecode-cli</code></span>
+      </footer>
+    </main>
+    <dialog id="confirmation" aria-labelledby="confirm-title">
+      <form method="dialog">
+        <h2 id="confirm-title"></h2>
+        <p id="confirm-text"></p>
+        <div class="dialog-actions">
+          <button value="cancel" autofocus>Cancel</button
+          ><button id="confirm-accept" value="approve" class="primary">
+            Confirm
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="player" aria-labelledby="player-title">
+      <div class="player-header">
+        <div>
+          <p class="eyebrow" id="player-mode">Replay</p>
+          <h2 id="player-title">Replay</h2>
+        </div>
+        <button id="player-close" aria-label="Close replay">✕</button>
+      </div>
+      <div class="player-body">
+        <div class="board-area">
+          <canvas
+            id="replay-board"
+            aria-label="Replay map, select a tile to inspect"
+            tabindex="0"
+          ></canvas>
+          <p id="tile-inspector" class="muted">Select a tile to inspect it.</p>
+        </div>
+        <aside class="player-stats">
+          <h3 id="player-bot-a">Team A</h3>
+          <dl id="stats-a"></dl>
+          <h3 id="player-bot-b">Team B</h3>
+          <dl id="stats-b"></dl>
+          <h3>Events</h3>
+          <div id="replay-events"></div>
+        </aside>
+      </div>
+      <div class="player-controls">
+        <div class="transport">
+          <button id="replay-first" aria-label="First frame">|‹</button
+          ><button id="replay-prev" aria-label="Previous frame">‹</button
+          ><button id="replay-play" class="primary">Play</button
+          ><button id="replay-next" aria-label="Next frame">›</button
+          ><button id="replay-last" aria-label="Last frame">›|</button
+          ><label class="sr-only" for="replay-speed">Playback speed</label
+          ><select id="replay-speed">
+            <option value="1">1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+            <option value="8">8×</option></select
+          ><span id="replay-position" class="mono"></span
+          ><label class="jump-label"
+            >Frame <input id="replay-jump" type="number" min="0" value="0"
+          /></label>
+        </div>
+        <label class="sr-only" for="replay-timeline">Replay timeline</label
+        ><input id="replay-timeline" type="range" min="0" max="1" value="0" />
+        <p id="replay-outcome" class="muted"></p>
+      </div>
+    </dialog>
+    <div id="toast" role="status" hidden></div>
+    <input type="file" id="file-picker" hidden />
+  </body>
+</html>

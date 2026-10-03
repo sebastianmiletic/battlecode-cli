@@ -1,7 +1,7 @@
-"""Six work surfaces. Related workflows share tabs, not duplicate navigation."""
+"""Core website-shaped work surfaces and their existing safe workflows."""
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal, HorizontalScroll, Vertical, VerticalScroll
+from textual.containers import Grid, Horizontal, HorizontalScroll, Vertical, VerticalScroll
 from textual.widgets import (
     Button,
     Checkbox,
@@ -22,24 +22,39 @@ class ActionBar(HorizontalScroll):
     """Focused buttons scroll into view in narrow terminal windows."""
 
 
-class Overview(Vertical):
+class Overview(VerticalScroll):
     def compose(self) -> ComposeResult:
-        yield Static("Your team", id="team-summary", markup=False)
+        yield Static("Your team", id="team-summary", classes="hidden", markup=False)
         with Horizontal(id="rating-row"):
             with Vertical(id="elo-metric"):
-                yield Static("ELO", classes="metric-label")
+                yield Static("Rating", classes="metric-label")
                 yield BoldDigits("--", id="elo-value")
+                yield Static("Peak n/a", id="elo-extra", classes="hint", markup=False)
             with Vertical(id="rank-metric"):
-                yield Static("RANK", classes="metric-label")
+                yield Static("Rank", classes="metric-label")
                 yield BoldDigits("--", id="rank-value")
-            yield Static("", id="team-record", markup=False)
+                yield Static("Best n/a", id="rank-extra", classes="hint", markup=False)
+            with Vertical(id="record-metric"):
+                yield Static("Record", classes="metric-label")
+                yield Static("", id="team-record", markup=False)
+            with Vertical(id="submission-metric"):
+                yield Static("Active submission", classes="metric-label")
+                yield Static("No active bot", id="active-summary", markup=False)
+                yield Button("Manage versions", id="overview-submissions")
+        with Grid(id="overview-panels"):
+            with Vertical(id="recent-panel", classes="site-panel"):
+                yield Static("Recent battles", classes="panel-heading")
+                yield DataTable(id="overview-games", cursor_type="row", zebra_stripes=False)
+                yield Button("Your battles", id="overview-battles")
+            with Vertical(id="nearby-panel", classes="site-panel"):
+                yield Static(
+                    "Ladder · around you", id="nearby-title", classes="panel-heading", markup=False
+                )
+                yield DataTable(id="overview-ladder", cursor_type="row")
+                yield Button("Full leaderboard", id="overview-leaderboard")
         with Horizontal(id="history-row"):
-            yield HistoryChart("ELO history", id="elo-history")
+            yield HistoryChart("Team rating", id="elo-history")
             yield HistoryChart("Rank history", inverse=True, id="rank-history")
-        yield Static("No active bot", id="active-summary", markup=False)
-        with Vertical(id="recent-panel"):
-            yield Static("Recent games", classes="section-title")
-            yield DataTable(id="overview-games", cursor_type="row", zebra_stripes=False)
         # Retain the small summary table as a data adapter; versions are now only shown in Bots.
         yield DataTable(id="overview-bots", classes="hidden", cursor_type="row")
         yield Static(
@@ -79,11 +94,18 @@ class Bots(Vertical):
 
 class Games(Vertical):
     def compose(self) -> ComposeResult:
+        from .site_views import PublicMatches
+
         with TabbedContent(id="game-tabs"):
-            with TabPane("Matches", id="game-matches"):
+            with TabPane("Your games", id="game-matches"):
                 with Vertical(classes="tab-workspace"):
                     yield Select(
-                        [("All games", "all"), ("Ranked", "ranked"), ("Unranked", "unranked")],
+                        [
+                            ("All modes", "all"),
+                            ("Ranked", "ranked"),
+                            ("Unranked", "unranked"),
+                            ("Simulation", "simulation"),
+                        ],
                         value="all",
                         allow_blank=False,
                         id="games-filter",
@@ -103,13 +125,22 @@ class Games(Vertical):
                         yield Button("Judge log", id="game-log", disabled=True)
             with TabPane("Local replays", id="game-local"):
                 yield Replays(id="replays")
+            with TabPane("All games", id="game-global"):
+                yield PublicMatches("games", id="all-games")
 
 
 class Leaderboard(Vertical):
     def compose(self) -> ComposeResult:
         yield Static("Leaderboard", classes="page-title")
         yield Static("", id="leaderboard-state", classes="hint", markup=False)
-        yield Input(placeholder="Search teams, members or ID", id="ladder-search")
+        with Horizontal(classes="site-filter-row"):
+            yield Input(placeholder="Search teams, members, institution or ID", id="ladder-search")
+            yield Select(
+                [("All returned teams", "all"), ("Prize eligible", "eligible")],
+                value="all",
+                allow_blank=False,
+                id="ladder-filter",
+            )
         yield DataTable(id="ladder-table", cursor_type="row", zebra_stripes=False)
         yield Static(
             "Connect an API key to load live standings.",
@@ -118,7 +149,8 @@ class Leaderboard(Vertical):
             markup=False,
         )
         with ActionBar(classes="actions"):
-            yield Button("Challenge team", id="ladder-challenge", classes="primary", disabled=True)
+            yield Button("Team profile", id="ladder-profile", classes="primary", disabled=True)
+            yield Button("Challenge team", id="ladder-challenge", disabled=True)
             yield Button("Refresh", id="leaderboard-refresh")
 
 
@@ -172,7 +204,7 @@ class Challenge(VerticalScroll):
 class Arena(Vertical):
     def compose(self) -> ComposeResult:
         with TabbedContent(id="arena-tabs"):
-            with TabPane("Benchmark", id="arena-local"):
+            with TabPane("Simulation", id="arena-local"):
                 with Vertical(classes="tab-workspace"):
                     with VerticalScroll(id="arena-setup"):
                         yield Static("", id="arena-runner-state", classes="hint", markup=False)
@@ -239,7 +271,7 @@ class Arena(Vertical):
                             yield Input("600", id="arena-timeout", type="integer")
                     yield Static("", id="arena-progress", markup=False)
                     with ActionBar(classes="actions"):
-                        yield Button("Review benchmark", id="arena-run", classes="primary")
+                        yield Button("Review simulation", id="arena-run", classes="primary")
                         yield Button("Stop", id="arena-stop", disabled=True)
                         yield Button("Install runner", id="arena-install")
             with TabPane("Online", id="arena-online"):
@@ -247,7 +279,7 @@ class Arena(Vertical):
             with TabPane("Results", id="arena-results"):
                 with Vertical(classes="tab-workspace"):
                     yield DataTable(id="arena-runs-table", cursor_type="row", zebra_stripes=False)
-                    yield Static("No benchmarks yet", id="arena-summary", markup=False)
+                    yield Static("No simulations yet", id="arena-summary", markup=False)
                     yield DataTable(
                         id="arena-results-table", cursor_type="row", zebra_stripes=False
                     )
@@ -294,6 +326,11 @@ class Settings(VerticalScroll):
             markup=False,
         )
         yield Static("", id="settings-status", classes="form-status", markup=False)
+        yield Static("Your account", classes="section-title")
+        yield Static(
+            "No account profile loaded.", id="account-profile", classes="form-note", markup=False
+        )
+        yield Button("Manage account on website", id="account-web")
         yield Static("Local files", classes="section-title")
         yield Static("", id="local-paths", classes="form-note", markup=False)
         yield Static("Key storage", classes="section-title")
