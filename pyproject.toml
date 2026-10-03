@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "battlecode-cli"
-version = "0.4.0"
+version = "0.4.1"
 description = "Local browser and terminal dashboards with official sandbox simulations for UNSW Battlecode."
 readme = "README.md"
 requires-python = ">=3.11"

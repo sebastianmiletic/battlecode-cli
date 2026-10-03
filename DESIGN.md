@@ -22,7 +22,9 @@ Forms scroll vertically; action bars and wider tables scroll horizontally. Fixed
 
 ## Type and interaction
 
-Use the terminal's own monospace. Bold headings/selection and heavy three-line rating/rank figures establish hierarchy. The sidebar labels mirror the website, while shortcuts 1–6 remain Overview, Submissions, Your games, Arena, Leaderboard and API keys. Tab order follows visible controls; Enter opens team/submission/battle details. Inputs keep typing precedence. Ctrl+B/Ctrl+T/Ctrl+K remain available from text controls. Mouse and wheel access is supplementary, never required.
+Use the terminal's own monospace with a deliberate cell-based type scale: three-row page titles when they fit, bold ruled section overlines, one-row body/table text and quieter captions. Short windows, long labels and non-Latin names fall back to their actual bold text, never clipped pixel lettering. Rating/rank figures retain the heavy three-line numerals. Divide Overview into Team summary, Recent activity and Performance history, and separate forms/results into named work sections. Keep main sections open rather than wrapping every area in a bordered card.
+
+The normal sidebar is 30 cells wide, with a blank row before each uppercase Compete/Build/Manage label and a separated utilities footer. At 50+ rows, navigation destinations gain an extra blank row; compact windows retain single-row options and scrolling. Action bars reserve a row for their horizontal scrollbar. Compact map toolbars preserve the board viewport and visible focus. The sidebar labels mirror the website, while shortcuts 1–6 remain Overview, Submissions, Your games, Arena, Leaderboard and API keys. Tab order follows visible controls; Enter opens team/submission/battle details. Inputs keep typing precedence. Ctrl+B/Ctrl+T/Ctrl+K remain available from text controls. Mouse and wheel access is supplementary, never required.
 
 ## States and account boundaries
 

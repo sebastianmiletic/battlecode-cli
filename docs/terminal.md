@@ -9,6 +9,12 @@ The saved Battlecode website determines the full navigation, profile structure a
 
 ![Overview, synthetic account data](dashboard.svg)
 
+## Readable sections and type
+
+Overview separates **Team summary**, **Recent activity** and **Performance history**. Forms and comparison results use named, ruled section headings. Main page titles use three-row cell lettering when space permits, with bold actual-text fallbacks for short windows, long names and non-Latin text. The terminal's base font size itself is unchanged.
+
+The sidebar has separated Compete/Build/Manage groups and a compact utilities footer. Tall terminals (50+ rows) add spacing between destinations; smaller terminals keep all destinations available through scrolling. Overview columns fit both the result and ELO change in the normal two-panel layout.
+
 ## Navigation and data
 
 | Group | View | Working surface |

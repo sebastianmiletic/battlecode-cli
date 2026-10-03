@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
     throw 'Use install.sh on macOS or Linux.'
 }
-$Package = 'https://github.com/sebastianmiletic/battlecode-cli/archive/refs/tags/v0.4.0.tar.gz'
+$Package = 'https://github.com/sebastianmiletic/battlecode-cli/archive/refs/tags/v0.4.1.tar.gz'
 if ($PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot 'src\battlecode_cli\__init__.py'))) {
     $Package = $PSScriptRoot
 }

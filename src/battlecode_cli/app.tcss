@@ -1,43 +1,48 @@
 Screen { background: $background; color: $foreground; }
 .hidden { display: none; }
 #workspace { height: 1fr; }
-#sidebar { width: 28; padding: 1; background: $surface; border-right: solid #262b33; }
-#sidebar-brand { height: 3; margin-bottom: 1; }
+#sidebar { width: 30; padding: 1; background: $surface; border-right: solid $foreground 12%; }
+#sidebar-brand { height: 4; margin-bottom: 0; border-bottom: solid $foreground 12%; }
 #brand-mark { width: 6; height: 3; color: $foreground; text-style: bold; }
 #wordmark { width: 1fr; height: 2; text-style: bold; }
 #sidebar-collapse { width: 2; min-width: 0; height: 1; padding: 0; margin: 0; background: transparent; color: $text-muted; }
-#sidebar-quota { height: 2; margin-bottom: 1; color: $text-muted; }
-#sidebar-queue { height: 1; width: 100%; min-width: 0; padding: 0; margin: 0; background: transparent; color: $text-muted; }
+#sidebar-runtime { height: 2; margin-bottom: 1; padding-top: 1; }
+#sidebar-quota { height: 1; width: 1fr; color: $text-muted; }
+#sidebar-queue { height: 1; width: 5; min-width: 0; padding: 0; margin: 0; background: $panel; color: $text-muted; }
 #sidebar-label { display: none; }
-#nav { border: none; padding: 0; height: 1fr; min-height: 3; background: transparent; }
+#nav { border: none; padding: 0; height: 1fr; min-height: 3; background: transparent; scrollbar-size: 1 1; }
 #nav > .option-list--option { padding: 0 1; }
 #nav > .option-list--option-highlighted { color: $foreground; background: $panel; text-style: bold; }
-#nav > .option-list--option-disabled { color: $text-muted; text-style: dim; }
-#sidebar-sponsors { height: 1; width: 100%; min-width: 0; padding: 0; margin-top: 1; color: $text-muted; background: transparent; }
-#sidebar-links { height: 1; margin-top: 1; }
+#nav > .option-list--option-disabled { color: $text-muted; text-style: bold; }
+#sidebar-footer { height: 6; padding-top: 1; border-top: solid $foreground 12%; }
+#sidebar-sponsors { height: 1; width: 1fr; min-width: 0; padding: 0; margin: 0; color: $text-muted; background: transparent; }
+#sidebar-links { height: 1; margin: 0; }
 #sidebar-discord, #sidebar-theme { height: 1; min-width: 0; padding: 0; margin: 0; background: transparent; color: $text-muted; }
 #sidebar-discord { width: 1fr; }
 #sidebar-theme { width: 3; }
 #sidebar-account { height: 1; min-width: 0; width: 100%; padding: 0; margin: 1 0 0 0; background: $panel; }
 #sidebar-note { color: $text-muted; height: 1; margin-top: 0; }
 #main-surface { width: 1fr; }
-#masthead { height: 5; padding: 1 2 0 2; border-bottom: solid #262b33; background: $background; }
-#page-heading { width: 1fr; }
-#site-eyebrow { height: 1; color: $text-muted; }
-#site-title { height: 2; text-style: bold; }
-#header-actions { width: auto; min-width: 25; }
-#projects-link { width: auto; min-width: 0; height: 1; padding: 0; margin: 0 0 1 0; background: transparent; color: $text-muted; }
+#masthead { height: 7; padding: 1 3 0 3; border-bottom: solid $foreground 12%; background: $background; }
+#header-meta { height: 1; margin-bottom: 1; }
+#page-heading { width: 100%; height: 3; }
+#site-eyebrow { height: 1; width: 1fr; color: $text-muted; }
+#site-title { height: 3; width: 1fr; text-style: bold; }
+#header-actions { width: 21; height: 3; align: right middle; }
+#projects-link { width: auto; min-width: 0; height: 1; padding: 0; margin: 0; background: transparent; color: $text-muted; }
 #projects-link:hover { color: $foreground; text-style: underline; }
-#site-challenge { height: 1; padding: 0 1; width: auto; margin: 0; }
+#site-challenge { height: 1; min-width: 0; padding: 0 1; width: auto; margin: 0; }
 #pages { width: 1fr; height: 1fr; }
-.page { padding: 1 2; }
+.page { padding: 1 3; }
 .page-title, .profile-name { text-style: bold; height: 2; }
+.section-heading { height: 2; margin-top: 1; text-style: bold; color: $text-muted; border-bottom: solid $foreground 12%; }
+#overview-summary-heading { margin-top: 0; }
 .section-title { text-style: bold; height: 2; padding-top: 1; }
-.panel-heading { height: 1; text-style: bold; color: $foreground; }
+.panel-heading { height: 2; text-style: bold; color: $foreground; border-bottom: solid $foreground 12%; }
 .hint { color: $text-muted; height: auto; max-height: 3; margin-bottom: 1; }
 .site-empty { height: auto; color: $text-muted; padding: 1; }
 .site-explainer { height: auto; max-width: 86; color: $text-muted; padding: 1 0; }
-#rating-row { height: 6; border-bottom: solid #262b33; margin-bottom: 1; }
+#rating-row { height: 6; margin-top: 1; margin-bottom: 0; }
 #elo-metric, #rank-metric, #record-metric, #submission-metric { width: 1fr; padding: 0 1; border-right: solid #262b33; }
 #elo-metric { padding-left: 0; }
 #submission-metric { border-right: none; }
@@ -47,11 +52,11 @@ Digits { height: 3; text-style: bold; color: $foreground; }
 #active-summary { height: 3; color: $foreground; }
 #overview-submissions { height: 1; min-width: 0; padding: 0; margin: 0; color: $text-muted; background: transparent; }
 #overview-panels { grid-size: 2; grid-gutter: 1 2; height: 10; margin-bottom: 1; }
-.site-panel { background: $surface; border: round #262b33; padding: 0 1; }
+.site-panel { background: $surface; border: none; padding: 0 1; }
 #recent-panel, #nearby-panel { height: 10; }
 #overview-battles, #overview-leaderboard { height: 1; min-width: 0; padding: 0; margin: 0; background: transparent; color: $text-muted; }
 #history-row { height: 9; }
-#elo-history, #rank-history { height: 9; background: $surface; border: round #262b33; padding: 0 1; }
+#elo-history, #rank-history { height: 9; background: $surface; border: none; padding: 1; }
 #elo-history { margin-right: 2; }
 TabbedContent, .tab-workspace { height: 1fr; }
 TabPane { padding: 0; height: 1fr; }
@@ -68,7 +73,7 @@ DataTable:focus > .datatable--cursor { background: $primary 20%; color: $foregro
 #game-detail { height: 1; }
 #game-parts { height: 6; }
 #games-filter, #my-battles-filter { width: 29; margin-bottom: 1; }
-.actions { height: 3; margin-top: 1; }
+.actions { height: 4; margin-top: 1; }
 Button { background: $panel; color: $foreground; border: none; min-width: 10; height: 3; padding: 0 2; margin-right: 1; text-style: none; }
 Button:hover { background: $boost 20%; }
 Button:focus { background: $primary 25%; color: $foreground; text-style: bold; }
@@ -114,7 +119,7 @@ Footer > .footer--description { color: $text-muted; }
 .site-filter-row Input { width: 1fr; margin-right: 1; }
 .site-filter-row Select { width: 24; }
 .site-charts { grid-size: 2; grid-gutter: 1 2; height: 10; margin-bottom: 1; }
-.site-charts HistoryChart { height: 10; border: round #262b33; background: $surface; padding: 0 1; }
+.site-charts HistoryChart { height: 10; border: none; background: $surface; padding: 1; }
 #ratings-table { min-height: 4; }
 #tournaments-table { height: 7; min-height: 4; }
 #tournament-bracket { height: 1fr; min-height: 4; background: $surface; border: round #262b33; }
@@ -139,6 +144,10 @@ Markdown { background: $background; }
 #editor-symmetry { width: 20; }
 #editor-new { min-width: 5; width: 7; padding: 0 1; margin: 0; }
 #map-editor .actions { height: 4; }
+#map-editor .site-filter-row { height: 2; }
+#map-editor .site-filter-row Input, #map-editor .site-filter-row Select, #map-editor .site-filter-row SelectCurrent, #map-editor .site-filter-row Button, #map-editor .path-row Input, #map-editor .path-row Button { height: 1; border: none; padding: 0 1; }
+#map-editor .path-row { height: 2; }
+#map-editor Input:focus, #map-editor Select:focus > SelectCurrent { background: $primary 20%; }
 #editor-tabs { height: 1fr; }
 #editor-viewport { height: 1fr; border: solid #262b33; overflow: auto auto; scrollbar-size: 1 1; }
 #editor-board { padding: 0; background: $background; }
@@ -146,12 +155,13 @@ Markdown { background: $background; }
 #editor-status { height: 2; margin-bottom: 0; }
 #map-editor .hint { height: 1; margin-bottom: 0; }
 .sidebar-collapsed #sidebar, .sidebar-collapsed.compact #sidebar { width: 3; padding: 0; }
-.sidebar-collapsed #sidebar-brand { height: 1; }
-.sidebar-collapsed #brand-mark, .sidebar-collapsed #wordmark, .sidebar-collapsed #sidebar-quota, .sidebar-collapsed #sidebar-queue, .sidebar-collapsed #nav, .sidebar-collapsed #sidebar-sponsors, .sidebar-collapsed #sidebar-links, .sidebar-collapsed #sidebar-account, .sidebar-collapsed #sidebar-note { display: none; }
+.sidebar-collapsed #sidebar-brand { height: 1; border: none; }
+.sidebar-collapsed #brand-mark, .sidebar-collapsed #wordmark, .sidebar-collapsed #sidebar-runtime, .sidebar-collapsed #nav, .sidebar-collapsed #sidebar-footer { display: none; }
 .compact #sidebar { width: 22; }
 .compact #brand-mark { width: 5; }
 .compact #sidebar-sponsors { display: none; }
 .compact #sidebar-note { display: none; }
+.compact #sidebar-footer { height: 4; padding-top: 0; }
 .compact Button { padding: 0 1; min-width: 8; }
 .compact #overview-panels, .compact #profile-panels { grid-size: 1; height: 22; }
 .compact #elo-metric, .compact #rank-metric { width: 1fr; }
@@ -169,8 +179,12 @@ Markdown { background: $background; }
 .compact #editor-new { width: 7; min-width: 7; }
 .compact #header-actions { min-width: 24; }
 .short .page { padding: 0 1; }
-.short #masthead { height: 3; padding-top: 0; }
-.short #site-title { height: 1; }
+.short #masthead { height: 3; padding: 0 1; }
+.short #header-meta { margin-bottom: 0; }
+.short #page-heading, .short #header-actions, .short #site-title { height: 1; }
+.short .section-heading { height: 1; margin-top: 0; border: none; }
+.short .actions { height: 3; }
+.short #rating-row { margin-top: 0; }
 .short #projects-link { margin-bottom: 0; }
 .short #rating-row { height: 5; }
 .short ContentTabs { margin-bottom: 0; }

@@ -9,7 +9,7 @@ A website-shaped terminal client for [UNSW Battlecode](https://game.battlecode.a
 ### macOS / Linux
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.4.0/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.4.1/install.sh | sh
 ```
 
 ### Windows
@@ -17,7 +17,7 @@ curl -fsSL https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.
 Run in PowerShell, preferably inside Windows Terminal:
 
 ```powershell
-irm https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.4.0/install.ps1 | iex
+irm https://raw.githubusercontent.com/sebastianmiletic/battlecode-cli/v0.4.1/install.ps1 | iex
 ```
 
 These scripts install [uv](https://docs.astral.sh/uv/) if needed, obtain Python 3.13, install the versioned GitHub source archive into your user account, and configure PATH. No administrator access or shell alias is needed. Review the [shell](install.sh) or [PowerShell](install.ps1) script before executing it if you prefer.
@@ -42,7 +42,7 @@ sh install.sh
 
 On Windows, use `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1` instead of `sh install.sh`.
 
-Already have uv and Git? Use `uv tool install --python 3.13 --from "git+https://github.com/sebastianmiletic/battlecode-cli.git@v0.4.0" battlecode-cli`, then `uv tool update-shell`. Python 3.11+ is supported; the installers choose 3.13.
+Already have uv and Git? Use `uv tool install --python 3.13 --from "git+https://github.com/sebastianmiletic/battlecode-cli.git@v0.4.1" battlecode-cli`, then `uv tool update-shell`. Python 3.11+ is supported; the installers choose 3.13.
 
 Update by rerunning the installer from a current checkout. Uninstall with `uv tool uninstall battlecode-cli`; saved accounts and replay files are preserved. Delete saved API keys in the dashboard before uninstalling if you also want their local secrets removed.
 

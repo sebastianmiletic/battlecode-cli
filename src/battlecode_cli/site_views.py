@@ -17,6 +17,7 @@ from textual.widgets import (
 
 from .charts import BoldDigits, HistoryChart
 from .site import DOCS
+from .typography import SectionHeading
 from .views import ActionBar
 
 
@@ -136,7 +137,7 @@ class Documentation(Vertical):
 
 class Visualiser(Vertical):
     def compose(self) -> ComposeResult:
-        yield Static("Replay visualiser", classes="page-title")
+        yield SectionHeading("Open a replay")
         yield Static(
             "Round-end playback, timeline seeking, tile inspection and full recorded-event diagnostics. Files stay local.",
             classes="hint",
@@ -157,6 +158,7 @@ class Visualiser(Vertical):
             classes="site-explainer",
             markup=False,
         )
+        yield SectionHeading("Saved replays")
         yield DataTable(id="visualiser-replays", cursor_type="row")
 
 
@@ -181,6 +183,7 @@ class TeamProfile(VerticalScroll):
                 yield Static("You vs them", classes="metric-label")
                 yield Static("n/a", id="profile-versus", markup=False)
                 yield Static("Server record when supplied", classes="hint")
+        yield SectionHeading("Performance history")
         with Grid(id="profile-charts", classes="site-charts"):
             yield HistoryChart("Rating", id="profile-elo-chart")
             yield HistoryChart("Rank", inverse=True, id="profile-rank-chart")

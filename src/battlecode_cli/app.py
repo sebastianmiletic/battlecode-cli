@@ -77,6 +77,7 @@ from .site_views import (
     Visualiser,
     YourBattles,
 )
+from .typography import PageTitle
 from .views import Arena, Bots, Games, Leaderboard, Overview, Settings
 
 HELP = """BATTLECODE
@@ -230,6 +231,24 @@ class BattlecodeApp(SiteActions, ArenaActions, App):
         )
         self.theme = "battlecode-site"
 
+    @staticmethod
+    def nav_prompt(label, icon, *, spacious=False):
+        prompt = Text(icon + "  ", style="dim")
+        prompt.append(label, style="not dim")
+        if spacious:
+            prompt.append("\n")
+        return prompt
+
+    def space_navigation(self):
+        nav = self.query_one_optional("#nav", OptionList)
+        if nav is None:
+            return
+        spacious = self.size.height >= 50
+        for _, items in NAVIGATION:
+            for page, label, icon in items:
+                nav.replace_option_prompt(page, self.nav_prompt(label, icon, spacious=spacious))
+        nav.replace_option_prompt("settings", self.nav_prompt("API keys", "♙", spacious=spacious))
+
     def compose(self) -> ComposeResult:
         yield Static("", id="connection", classes="hidden", markup=False)
         with Horizontal(id="workspace"):
@@ -238,36 +257,41 @@ class BattlecodeApp(SiteActions, ArenaActions, App):
                     yield Static("╭○ ○╮\n│• •│\n╰━━━╯", id="brand-mark", markup=False)
                     yield Static("UNSW\nBattlecode", id="wordmark", markup=False)
                     yield Button("‹", id="sidebar-collapse")
-                yield Static("Autoscrims this hour\nn/a", id="sidebar-quota", markup=False)
-                yield Button("Judge queue", id="sidebar-queue")
+                with Horizontal(id="sidebar-runtime"):
+                    yield Static("Scrims: n/a", id="sidebar-quota", markup=False)
+                    yield Button("Queue", id="sidebar-queue")
                 options = []
                 for group, items in NAVIGATION:
                     if group:
                         options.append(
                             Option(
-                                Text(group, style="dim"), disabled=True, id="group-" + group.lower()
+                                Text("\n" + group.upper(), style="bold"),
+                                disabled=True,
+                                id="group-" + group.lower(),
                             )
                         )
                     for page, label, icon in items:
                         self.nav_indices[page] = len(options)
-                        options.append(Option(Text(f"{icon}  {label}"), id=page))
+                        options.append(Option(self.nav_prompt(label, icon), id=page))
                 self.nav_indices["settings"] = len(options)
-                options.append(Option(Text("♙  API keys"), id="settings"))
+                options.append(Option(self.nav_prompt("API keys", "♙"), id="settings"))
                 yield OptionList(*options, id="nav")
-                yield Button("Presented by Jump / HRT", id="sidebar-sponsors")
-                with Horizontal(id="sidebar-links"):
-                    yield Button("Discord", id="sidebar-discord")
-                    yield Button("☼", id="sidebar-theme")
-                yield Button("Account / keys", id="sidebar-account")
-                yield Static("? Help · Ctrl+B navigation", id="sidebar-note", markup=False)
+                with Vertical(id="sidebar-footer"):
+                    with Horizontal(id="sidebar-links"):
+                        yield Button("Partners", id="sidebar-sponsors")
+                        yield Button("Discord", id="sidebar-discord")
+                        yield Button("☼", id="sidebar-theme")
+                    yield Button("Account / keys", id="sidebar-account")
+                    yield Static("? Help · Ctrl+B sidebar", id="sidebar-note", markup=False)
             with Vertical(id="main-surface"):
-                with Horizontal(id="masthead"):
-                    with Vertical(id="page-heading"):
-                        yield Static("Your team", id="site-eyebrow", markup=False)
-                        yield Static("Overview", id="site-title", markup=False)
-                    with Vertical(id="header-actions"):
+                with Vertical(id="masthead"):
+                    with Horizontal(id="header-meta"):
+                        yield Static("Your team · Overview", id="site-eyebrow", markup=False)
                         yield Button("See more of my projects", id="projects-link")
-                        yield Button("Find an opponent", id="site-challenge", classes="primary")
+                    with Horizontal(id="page-heading"):
+                        yield PageTitle("Overview", id="site-title")
+                        with Vertical(id="header-actions"):
+                            yield Button("Find an opponent", id="site-challenge", classes="primary")
                 with ContentSwitcher(initial="overview", id="pages"):
                     yield Overview(id="overview", classes="page")
                     yield Updates(id="updates", classes="page")
@@ -325,7 +349,7 @@ class BattlecodeApp(SiteActions, ArenaActions, App):
             "replays-table": ("FILE", "MAP", "MODE", "ROUNDS", "WINNER", "IMPORTED"),
         }
         widths = {
-            "overview-games": (20, 8, 8, 7),
+            "overview-games": (16, 6, 8, 5),
             "games-table": (6, 20, 8, 9, 12, 7, 12),
             "ladder-table": (4, 24, 6, 8, 7, 30, 7, 24, 8),
         }
@@ -340,6 +364,7 @@ class BattlecodeApp(SiteActions, ArenaActions, App):
         self.update_settings()
         self.set_class(self.size.width < 110, "compact")
         self.set_class(self.size.height < 32, "short")
+        self.space_navigation()
         self.set_interval(self.refresh_seconds, self.poll)
         self.render_library()
         self.render_arena_maps(select_all=True)
@@ -361,6 +386,7 @@ class BattlecodeApp(SiteActions, ArenaActions, App):
     def on_resize(self, event) -> None:
         self.set_class(event.size.width < 110, "compact")
         self.set_class(event.size.height < 32, "short")
+        self.space_navigation()
 
     async def on_unmount(self) -> None:
         if self.arena_runner:

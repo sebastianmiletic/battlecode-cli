@@ -99,7 +99,9 @@ class SiteActions(MessagePump):
         self.query_one("#tournament-bracket", Tree).clear()
         self.query_one("#account-profile", Static).update("No account profile loaded.")
         self.query_one("#sidebar-account", Button).label = "Account / keys"
-        self.query_one("#sidebar-quota", Static).update("Autoscrims this hour\nn/a")
+        quota = self.query_one("#sidebar-quota", Static)
+        quota.update("Scrims: n/a")
+        quota.tooltip = "Autoscrims this hour; count not supplied."
 
     def site_title(self, page=None):
         page = page or self.site_page
@@ -111,9 +113,21 @@ class SiteActions(MessagePump):
             title = clean_label(own.get("name", "Overview"))
         elif page == "team":
             title = clean_label(team_data(self.public_profile or self.team).get("name", "Team"))
+        elif page == "settings":
+            title = "API keys"
         self.query_one("#site-title", Static).update(Text(title, style="bold"))
+        from .site import NAVIGATION
+
+        section = next(
+            (
+                group or "Home"
+                for group, items in NAVIGATION
+                if any(item[0] == page for item in items)
+            ),
+            "Account",
+        )
         self.query_one("#site-eyebrow", Static).update(
-            "Your team" if page == "overview" else "Team" if page == "team" else "Battlecode 2026"
+            f"{section.upper()} / {'API keys' if page == 'settings' else dict(PAGES).get(page, 'Battlecode')}"
         )
 
     def site_navigate(self, page):
@@ -206,9 +220,9 @@ class SiteActions(MessagePump):
             source = raw.get("queue", raw) if isinstance(raw, dict) else {}
             capacity = source.get("capacity", source.get("workers"))
             queued = source.get("length", source.get("queued", source.get("pending")))
-            self.query_one("#sidebar-quota", Static).update(
-                f"Judge queue {queued if queued is not None else 'n/a'}\nCapacity {capacity if capacity is not None else 'n/a'}"
-            )
+            quota = self.query_one("#sidebar-quota", Static)
+            quota.update(f"Queued: {queued if queued is not None else 'n/a'}")
+            quota.tooltip = f"Judge capacity: {capacity if capacity is not None else 'n/a'}"
 
     @work(group="site-public", exclusive=True)
     async def load_public_page(self, page, *, force=False):
@@ -351,9 +365,9 @@ class SiteActions(MessagePump):
         )
         if "autoscrimsThisHour" in self.team or "autoscrimsThisHour" in team:
             used = self.team.get("autoscrimsThisHour", team.get("autoscrimsThisHour"))
-            self.query_one("#sidebar-quota", Static).update(
-                f"Autoscrims this hour\n{clean_label(used)}"
-            )
+            quota = self.query_one("#sidebar-quota", Static)
+            quota.update(f"Scrims: {clean_label(used)}")
+            quota.tooltip = "Autoscrims this hour"
         self.query_one("#nearby-title", Static).update(
             "Ladder · around you"
             if any(row.get("id") == team.get("id") for row in self.ladder)

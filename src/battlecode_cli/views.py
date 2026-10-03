@@ -16,6 +16,7 @@ from textual.widgets import (
 )
 
 from .charts import BoldDigits, HistoryChart
+from .typography import SectionHeading
 
 
 class ActionBar(HorizontalScroll):
@@ -25,6 +26,7 @@ class ActionBar(HorizontalScroll):
 class Overview(VerticalScroll):
     def compose(self) -> ComposeResult:
         yield Static("Your team", id="team-summary", classes="hidden", markup=False)
+        yield SectionHeading("Team summary", id="overview-summary-heading")
         with Horizontal(id="rating-row"):
             with Vertical(id="elo-metric"):
                 yield Static("Rating", classes="metric-label")
@@ -41,6 +43,7 @@ class Overview(VerticalScroll):
                 yield Static("Active submission", classes="metric-label")
                 yield Static("No active bot", id="active-summary", markup=False)
                 yield Button("Manage versions", id="overview-submissions")
+        yield SectionHeading("Recent activity")
         with Grid(id="overview-panels"):
             with Vertical(id="recent-panel", classes="site-panel"):
                 yield Static("Recent battles", classes="panel-heading")
@@ -52,6 +55,7 @@ class Overview(VerticalScroll):
                 )
                 yield DataTable(id="overview-ladder", cursor_type="row")
                 yield Button("Full leaderboard", id="overview-leaderboard")
+        yield SectionHeading("Performance history")
         with Horizontal(id="history-row"):
             yield HistoryChart("Team rating", id="elo-history")
             yield HistoryChart("Rank history", inverse=True, id="rank-history")
@@ -131,7 +135,7 @@ class Games(Vertical):
 
 class Leaderboard(Vertical):
     def compose(self) -> ComposeResult:
-        yield Static("Leaderboard", classes="page-title")
+        yield SectionHeading("Team standings")
         yield Static("", id="leaderboard-state", classes="hint", markup=False)
         with Horizontal(classes="site-filter-row"):
             yield Input(placeholder="Search teams, members, institution or ID", id="ladder-search")
@@ -156,10 +160,12 @@ class Leaderboard(Vertical):
 
 class Upload(VerticalScroll):
     def compose(self) -> ComposeResult:
+        yield SectionHeading("Source files")
         yield Static("Bot ZIP or project folder (max 4 MB)", classes="field-label")
         with Horizontal(id="path-row"):
             yield Input(placeholder="~/Coding/my-bot or ~/Downloads/bot.zip", id="upload-path")
             yield Button("Browse", id="browse-bot")
+        yield SectionHeading("Version details")
         yield Static("Version name", classes="field-label")
         yield Input(placeholder="e.g. nitro-v1", id="upload-name", max_length=120)
         yield Static("Description (optional)", classes="field-label")
@@ -208,6 +214,7 @@ class Arena(Vertical):
                 with Vertical(classes="tab-workspace"):
                     with VerticalScroll(id="arena-setup"):
                         yield Static("", id="arena-runner-state", classes="hint", markup=False)
+                        yield SectionHeading("Versions to compare")
                         yield Static("Bot A: ZIP or project folder", classes="field-label")
                         with Horizontal(classes="path-row"):
                             yield Input(placeholder="First version", id="arena-bot-a")
@@ -216,7 +223,7 @@ class Arena(Vertical):
                         with Horizontal(classes="path-row"):
                             yield Input(placeholder="Second version", id="arena-bot-b")
                             yield Button("Browse", id="arena-browse-b")
-                        yield Static("Maps", classes="field-label")
+                        yield SectionHeading("Map selection")
                         yield Select(
                             [
                                 ("Official maps", "official"),
@@ -278,7 +285,9 @@ class Arena(Vertical):
                 yield Challenge(id="challenge")
             with TabPane("Results", id="arena-results"):
                 with Vertical(classes="tab-workspace"):
+                    yield SectionHeading("Saved comparisons")
                     yield DataTable(id="arena-runs-table", cursor_type="row", zebra_stripes=False)
+                    yield SectionHeading("Selected comparison")
                     yield Static("No simulations yet", id="arena-summary", markup=False)
                     yield DataTable(
                         id="arena-results-table", cursor_type="row", zebra_stripes=False
@@ -308,6 +317,7 @@ class Settings(VerticalScroll):
             yield Button("Delete key", id="delete-account", disabled=True)
             yield Button("Open team page", id="team-page")
             yield Button("Continue offline", id="continue-offline")
+        yield SectionHeading("Connect an account")
         yield Static("New API key", classes="field-label")
         yield Input(
             placeholder="Paste bc_… (hidden). Enter to connect.", id="api-key", password=True
@@ -326,14 +336,14 @@ class Settings(VerticalScroll):
             markup=False,
         )
         yield Static("", id="settings-status", classes="form-status", markup=False)
-        yield Static("Your account", classes="section-title")
+        yield SectionHeading("Your account")
         yield Static(
             "No account profile loaded.", id="account-profile", classes="form-note", markup=False
         )
         yield Button("Manage account on website", id="account-web")
-        yield Static("Local files", classes="section-title")
+        yield SectionHeading("Local files")
         yield Static("", id="local-paths", classes="form-note", markup=False)
-        yield Static("Key storage", classes="section-title")
+        yield SectionHeading("Key storage")
         yield Static(
             "OS keyring preferred. Linux/macOS fallback: owner-only, unencrypted files. Windows requires Credential Manager. Disconnect never activates another saved key.",
             classes="form-note",

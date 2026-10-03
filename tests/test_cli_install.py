@@ -132,7 +132,7 @@ def test_shell_installer_quotes_paths_and_can_run_from_github(tmp_path, local):
     )
     uv.chmod(0o755)
     command = bin_dir / "battlecode-cli"
-    command.write_text('#!/bin/sh\nprintf "%s\\n" "battlecode-cli 0.4.0"\n')
+    command.write_text('#!/bin/sh\nprintf "%s\\n" "battlecode-cli 0.4.1"\n')
     command.chmod(0o755)
     trace = tmp_path / "trace"
     env = {
@@ -149,9 +149,9 @@ def test_shell_installer_quotes_paths_and_can_run_from_github(tmp_path, local):
     expected = (
         str(root)
         if local
-        else "https://github.com/sebastianmiletic/battlecode-cli/archive/refs/tags/v0.4.0.tar.gz"
+        else "https://github.com/sebastianmiletic/battlecode-cli/archive/refs/tags/v0.4.1.tar.gz"
     )
     assert expected in lines
     assert "--python" in lines
     assert "3.13" in lines
-    assert "battlecode-cli 0.4.0" in result.stdout
+    assert "battlecode-cli 0.4.1" in result.stdout
